@@ -32,6 +32,7 @@ const CustomerReg: React.FC<{ user: User }> = ({ user }) => {
   const [formData, setFormData] = useState({
     cnpj_cpf: '',
     name: '',
+    trade_name: '',
     email: '',
     phone: '',
     cep: '',
@@ -77,6 +78,7 @@ const CustomerReg: React.FC<{ user: User }> = ({ user }) => {
           setFormData(prev => ({
             ...prev,
             name: data.razao_social || prev.name,
+            trade_name: data.nome_fantasia || prev.trade_name,
             email: data.email || prev.email,
             cep: data.cep ? formatCEP(data.cep) : prev.cep,
             logradouro: data.logradouro || prev.logradouro,
@@ -148,7 +150,7 @@ const CustomerReg: React.FC<{ user: User }> = ({ user }) => {
       setShowForm(false);
       setEditingId(null);
       setFormData({
-        cnpj_cpf: '', name: '', email: '', phone: '',
+        cnpj_cpf: '', name: '', trade_name: '', email: '', phone: '',
         cep: '', logradouro: '', bairro: '', cidade: '', uf: ''
       });
       fetchCustomers();
@@ -189,6 +191,7 @@ const CustomerReg: React.FC<{ user: User }> = ({ user }) => {
     setFormData({
       cnpj_cpf: customer.cnpj_cpf || '',
       name: customer.name || '',
+      trade_name: customer.trade_name || '',
       email: customer.email || '',
       phone: customer.phone || '',
       cep: customer.cep || '',
@@ -217,7 +220,7 @@ const CustomerReg: React.FC<{ user: User }> = ({ user }) => {
             onClick={() => {
               setEditingId(null);
               setFormData({
-                cnpj_cpf: '', name: '', email: '', phone: '',
+                cnpj_cpf: '', name: '', trade_name: '', email: '', phone: '',
                 cep: '', logradouro: '', bairro: '', cidade: '', uf: ''
               });
               setShowForm(true);
@@ -273,6 +276,9 @@ const CustomerReg: React.FC<{ user: User }> = ({ user }) => {
                         </div>
                         <div className="flex flex-col">
                           <span className="font-bold text-slate-900 dark:text-white">{c.name}</span>
+                          {c.trade_name && (
+                            <span className="text-[10px] text-primary font-black uppercase tracking-wider">{c.trade_name}</span>
+                          )}
                           <span className="text-[10px] text-slate-400 font-medium">{c.email}</span>
                         </div>
                       </div>
@@ -333,14 +339,23 @@ const CustomerReg: React.FC<{ user: User }> = ({ user }) => {
 
             <form onSubmit={handleSave} className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="md:col-span-2 space-y-2">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Nome do Cliente / Razão Social</label>
+                <div className="md:col-span-2 space-y-2 text-left">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Razão Social (Nome Oficial)</label>
                   <input
                     required
                     value={formData.name}
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                     className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold transition-all"
-                    placeholder="Nome completo ou Razão Social"
+                    placeholder="Razão Social"
+                  />
+                </div>
+                <div className="md:col-span-2 space-y-2 text-left">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Nome Fantasia</label>
+                  <input
+                    value={formData.trade_name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, trade_name: e.target.value }))}
+                    className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold transition-all"
+                    placeholder="Nome comercial da marca"
                   />
                 </div>
                 <div className="space-y-2 relative">
