@@ -19,8 +19,8 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ to, icon, label, isActive, is
     <Link
       to={to}
       className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive
-          ? 'bg-primary/10 border border-primary/20 text-slate-900 dark:text-white shadow-lg'
-          : 'text-slate-600 dark:text-text-secondary hover:bg-slate-100 dark:hover:bg-surface-highlight hover:text-slate-900 dark:hover:text-white'
+        ? 'bg-primary/10 border border-primary/20 text-slate-900 dark:text-white shadow-lg'
+        : 'text-slate-600 dark:text-text-secondary hover:bg-slate-100 dark:hover:bg-surface-highlight hover:text-slate-900 dark:hover:text-white'
         }`}
     >
       <span className={`material-symbols-outlined ${isActive ? 'text-primary' : 'text-slate-400 dark:text-text-secondary'}`}>
@@ -60,12 +60,12 @@ const Layout: React.FC<{ children: React.ReactNode, user: User, onLogout: () => 
       <aside className="hidden lg:flex flex-col w-72 h-full bg-white dark:bg-background-dark border-r border-slate-200 dark:border-surface-highlight shrink-0">
         <div className="flex flex-col h-full p-4">
           <div className="flex gap-3 items-center px-2 py-4 mb-6">
-            <div className="size-10 rounded-full bg-primary flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.3)]">
-              <span className="material-symbols-outlined text-background-dark">account_balance_wallet</span>
+            <div className="size-10 overflow-hidden rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.2)]">
+              <img src="/logo.png" alt="FinTek Logo" className="w-full h-full object-cover" />
             </div>
             <div className="flex flex-col">
               <h1 className="text-slate-900 dark:text-white text-lg font-black leading-tight tracking-tight">FinTek</h1>
-              <p className="text-primary font-bold text-[10px] uppercase tracking-wider">Gestão Integrada</p>
+              <p className="text-primary font-bold text-[10px] uppercase tracking-wider">Gestão Financeira</p>
             </div>
           </div>
 
