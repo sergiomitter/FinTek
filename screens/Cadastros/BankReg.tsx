@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { User } from '../../types';
+import { formatDocument } from '../../utils/helpers';
 import {
   Plus,
   Search,
@@ -15,7 +16,8 @@ import {
   Wallet,
   Bitcoin,
   Building2,
-  CreditCard
+  CreditCard,
+  User as UserIcon
 } from 'lucide-react';
 
 const BankReg: React.FC<{ user: User }> = ({ user }) => {
@@ -30,7 +32,9 @@ const BankReg: React.FC<{ user: User }> = ({ user }) => {
     name: '',
     account_type: 'BANK', // BANK, BROKER, EXCHANGE
     agency: '',
-    account_number: ''
+    account_number: '',
+    owner_document: '',
+    owner_name: ''
   });
 
   useEffect(() => {
@@ -76,7 +80,7 @@ const BankReg: React.FC<{ user: User }> = ({ user }) => {
     } else {
       setShowForm(false);
       setEditingId(null);
-      setFormData({ name: '', account_type: 'BANK', agency: '', account_number: '' });
+      setFormData({ name: '', account_type: 'BANK', agency: '', account_number: '', owner_document: '', owner_name: '' });
       fetchBanks();
     }
     setSaving(false);
@@ -110,13 +114,39 @@ const BankReg: React.FC<{ user: User }> = ({ user }) => {
     }
   };
 
+  const handleOwnerDocChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = formatDocument(e.target.value);
+    setFormData(prev => ({ ...prev, owner_document: value }));
+
+    const clean = value.replace(/\D/g, '');
+    if (clean.length === 11) {
+      // Look for Person
+      const { data } = await supabase
+        .from('people')
+        .select('name')
+        .eq('cpf', value)
+        .maybeSingle();
+      if (data) setFormData(prev => ({ ...prev, owner_name: data.name }));
+    } else if (clean.length === 14) {
+      // Look for Company
+      const { data } = await supabase
+        .from('companies')
+        .select('razao_social')
+        .eq('cnpj', value)
+        .maybeSingle();
+      if (data) setFormData(prev => ({ ...prev, owner_name: data.razao_social }));
+    }
+  };
+
   const openEdit = (bank: any) => {
     setEditingId(bank.id);
     setFormData({
       name: bank.name || '',
       account_type: bank.account_type || 'BANK',
       agency: bank.agency || '',
-      account_number: bank.account_number || ''
+      account_number: bank.account_number || '',
+      owner_document: bank.owner_document || '',
+      owner_name: bank.owner_name || ''
     });
     setShowForm(true);
   };
@@ -153,7 +183,7 @@ const BankReg: React.FC<{ user: User }> = ({ user }) => {
           <button
             onClick={() => {
               setEditingId(null);
-              setFormData({ name: '', account_type: 'BANK', agency: '', account_number: '' });
+              setFormData({ name: '', account_type: 'BANK', agency: '', account_number: '', owner_document: '', owner_name: '' });
               setShowForm(true);
             }}
             className="px-8 h-12 rounded-xl bg-primary text-background-dark font-black shadow-lg shadow-primary/20 flex items-center gap-2 hover:scale-[1.02] transition-all"
@@ -180,6 +210,7 @@ const BankReg: React.FC<{ user: User }> = ({ user }) => {
             <thead>
               <tr className="bg-slate-50 dark:bg-surface-highlight/30 border-b border-slate-100 dark:border-surface-highlight">
                 <th className="px-6 py-5 text-[10px] font-black text-slate-500 dark:text-text-secondary uppercase tracking-[0.2em]">Instituição</th>
+                <th className="px-6 py-5 text-[10px] font-black text-slate-500 dark:text-text-secondary uppercase tracking-[0.2em]">Titular / Documento</th>
                 <th className="px-6 py-5 text-[10px] font-black text-slate-500 dark:text-text-secondary uppercase tracking-[0.2em]">Tipo</th>
                 <th className="px-6 py-5 text-[10px] font-black text-slate-500 dark:text-text-secondary uppercase tracking-[0.2em]">Agência / Conta</th>
                 <th className="px-6 py-5 text-[10px] font-black text-slate-500 dark:text-text-secondary uppercase tracking-[0.2em]">Status</th>
@@ -189,13 +220,13 @@ const BankReg: React.FC<{ user: User }> = ({ user }) => {
             <tbody className="divide-y divide-slate-100 dark:divide-surface-highlight">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-10 text-center">
+                  <td colSpan={6} className="px-6 py-10 text-center">
                     <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
                   </td>
                 </tr>
               ) : filteredBanks.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-10 text-center text-slate-500">Nenhum registro encontrado.</td>
+                  <td colSpan={6} className="px-6 py-10 text-center text-slate-500">Nenhum registro encontrado.</td>
                 </tr>
               ) : (
                 filteredBanks.map((b) => (
@@ -205,7 +236,13 @@ const BankReg: React.FC<{ user: User }> = ({ user }) => {
                         <div className="size-10 rounded-xl bg-slate-100 dark:bg-surface-highlight/20 flex items-center justify-center">
                           {getTypeIcon(b.account_type)}
                         </div>
-                        <span className="font-bold text-slate-900 dark:text-white">{b.name}</span>
+                        <span className="font-bold text-slate-900 dark:text-white capitalize text-sm">{b.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5 border-l border-slate-100 dark:border-surface-highlight/10">
+                      <div className="flex flex-col">
+                        <span className="font-bold text-slate-900 dark:text-white capitalize text-sm">{b.owner_name || '-'}</span>
+                        <span className="text-[10px] text-slate-400 font-medium tracking-wider">{b.owner_document || '-'}</span>
                       </div>
                     </td>
                     <td className="px-6 py-5">
@@ -268,6 +305,29 @@ const BankReg: React.FC<{ user: User }> = ({ user }) => {
             </div>
 
             <form onSubmit={handleSave} className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="md:col-span-1 space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Documento (CPF ou CNPJ)</label>
+                  <input
+                    required
+                    value={formData.owner_document}
+                    onChange={handleOwnerDocChange}
+                    className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold transition-all"
+                    placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                  />
+                </div>
+                <div className="md:col-span-1 space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Nome do Titular</label>
+                  <input
+                    required
+                    value={formData.owner_name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, owner_name: e.target.value }))}
+                    className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold transition-all"
+                    placeholder="Nome ou Razão Social"
+                  />
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Tipo de Instituição</label>
                 <div className="grid grid-cols-3 gap-4">
