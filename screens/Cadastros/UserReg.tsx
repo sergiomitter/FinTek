@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { User, UserRole } from '../../types';
 import { generateTempPassword, formatPhone } from '../../utils/helpers';
-import { supabase } from '../../lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+import { supabase, supabaseUrl, supabaseAnonKey } from '../../lib/supabase';
 import { UserPlus, Edit3, Trash2, ShieldCheck, Lock, Unlock, Mail, Loader2, X, Search } from 'lucide-react';
 
 const UserReg: React.FC<{ user: User }> = ({ user }) => {
@@ -57,28 +58,29 @@ const UserReg: React.FC<{ user: User }> = ({ user }) => {
 
     try {
       if (editingUserId) {
-        // Update Profile
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({
+        // Use RPC to update both auth and profile
+        const { data, error: rpcError } = await supabase.rpc('manage_user', {
+          target_user_id: editingUserId,
+          action: 'UPDATE',
+          new_data: {
             nome: formData.nome,
             celular: formData.celular,
             funcao: formData.funcao,
             role: formData.role
-          })
-          .eq('id', editingUserId);
+          }
+        });
 
-        if (updateError) throw updateError;
+        if (rpcError) throw rpcError;
         alert('Dados do usuário atualizados com sucesso!');
       } else {
-        // Create in Auth (requires a trick or a specialized edge function typically, 
-        // but for this MVP/Demo we'll use a simulated invite if we can't create directly)
-
-        // For Supabase, creating a user usually requires service_role key or an edge function.
-        // We will simulate the invitation logic as requested.
         const tempPass = generateTempPassword();
 
-        const { data: authData, error: authError } = await supabase.auth.signUp({
+        // Create a transient client to prevent session hijacking
+        const transientClient = createClient(supabaseUrl, supabaseAnonKey, {
+          auth: { persistSession: false }
+        });
+
+        const { data: authData, error: authError } = await transientClient.auth.signUp({
           email: formData.email!,
           password: tempPass,
           options: {
@@ -94,11 +96,22 @@ const UserReg: React.FC<{ user: User }> = ({ user }) => {
 
         if (authError) throw authError;
 
-        alert(`USUÁRIO CONVIDADO!\n\nE-mail enviado por ${SENDER_EMAIL} para ${formData.email}!\n\nLink de Acesso: ${SYSTEM_LINK}\nSenha Provisória: ${tempPass}\n\nO usuário deverá trocar a senha no primeiro acesso.`);
+        // Success Feedback
+        alert(
+          `CONVITE GERADO COM SUCESSO!\n\n` +
+          `Usuário: ${formData.nome}\n` +
+          `E-mail: ${formData.email}\n` +
+          `Senha Provisória: ${tempPass}\n\n` +
+          `IMPORTANTE:\n` +
+          `1. Para que o e-mail seja enviado automaticamente pelo sistema via "${SENDER_EMAIL}", é necessário configurar o servidor SMTP personalizado no Painel do Supabase (Project Settings > Auth > SMTP).\n` +
+          `2. Caso o e-mail não chegue, verifique se a opção "Confirm Email" está ativada no Supabase. Se estiver ativa, o usuário deve confirmar o e-mail antes de acessar.\n` +
+          `3. Você pode copiar os dados acima e enviar manualmente ao usuário se preferir.`
+        );
       }
 
       closeForm();
-      fetchUsers();
+      // Wait a bit for trigger to complete before fetching
+      setTimeout(fetchUsers, 1000);
     } catch (err: any) {
       alert('Erro ao processar: ' + err.message);
     } finally {
@@ -135,10 +148,10 @@ const UserReg: React.FC<{ user: User }> = ({ user }) => {
 
     if (confirm(`Deseja realmente ${actionLabel} o usuário ${user.nome}?`)) {
       setLoading(true);
-      const { error } = await supabase
-        .from('profiles')
-        .update({ is_blocked: newBlockedState, failed_attempts: 0 })
-        .eq('id', user.id);
+      const { data, error } = await supabase.rpc('manage_user', {
+        target_user_id: user.id,
+        action: newBlockedState ? 'BLOCK' : 'UNBLOCK'
+      });
 
       if (error) {
         alert('Erro ao atualizar status: ' + error.message);
@@ -155,15 +168,12 @@ const UserReg: React.FC<{ user: User }> = ({ user }) => {
       return;
     }
 
-    if (confirm(`Deseja realmente EXCLUIR o usuário ${name}? Esta ação removerá o perfil do banco de dados.`)) {
+    if (confirm(`Deseja realmente EXCLUIR o usuário ${name}? Esta ação removerá o perfil e o acesso definitivamente.`)) {
       setLoading(true);
-      // Profile delete is handled by cascade if we delete from auth, 
-      // but we might not have permissions to delete from auth directly.
-      // We delete from profiles at least.
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', id);
+      const { data, error } = await supabase.rpc('manage_user', {
+        target_user_id: id,
+        action: 'DELETE'
+      });
 
       if (error) {
         alert('Erro ao excluir usuário: ' + error.message);
