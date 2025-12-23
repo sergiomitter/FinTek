@@ -26,6 +26,7 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
   const [partners, setPartners] = useState<{ name: string; cpf: string; participation: string }[]>([]);
   const [newPartner, setNewPartner] = useState({ name: '', cpf: '', participation: '' });
   const [editingPartnerIdx, setEditingPartnerIdx] = useState<number | null>(null);
+  const [showPartnerForm, setShowPartnerForm] = useState(false);
 
   useEffect(() => {
     fetchCompanies();
@@ -178,8 +179,10 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
       updatedPartners[editingPartnerIdx] = { ...newPartner };
       setPartners(updatedPartners);
       setEditingPartnerIdx(null);
+      setShowPartnerForm(false);
     } else {
       setPartners([...partners, { ...newPartner }]);
+      setShowPartnerForm(false);
     }
 
     setNewPartner({ name: '', cpf: '', participation: '' });
@@ -199,6 +202,7 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
     const partner = partners[index];
     setNewPartner({ ...partner });
     setEditingPartnerIdx(index);
+    setShowPartnerForm(true);
     // Scroll to partner form
     const partnerForm = document.getElementById('partner-form');
     if (partnerForm) {
@@ -215,6 +219,8 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
     });
     setEditingId(company.id);
     setShowForm(true);
+    setShowPartnerForm(false);
+    setEditingPartnerIdx(null);
 
     // Fetch Partners
     const { data: partnersData, error: partnersError } = await supabase
@@ -256,6 +262,7 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
     setNewPartner({ name: '', cpf: '', participation: '' });
     setEditingId(null);
     setEditingPartnerIdx(null);
+    setShowPartnerForm(false);
     setShowForm(false);
     setError('');
   };
@@ -370,64 +377,76 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
 
               {/* Partners Section */}
               <div className="md:col-span-12 space-y-6 pt-6 border-t border-slate-100 dark:border-surface-highlight">
-                <div className="flex items-center gap-2">
-                  <Users className="text-primary w-5 h-5" />
-                  <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">Sócios</h4>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Users className="text-primary w-5 h-5" />
+                    <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">Sócios</h4>
+                  </div>
+                  {!showPartnerForm && (
+                    <button
+                      type="button"
+                      onClick={() => setShowPartnerForm(true)}
+                      className="flex items-center gap-2 px-4 h-9 rounded-lg bg-primary/10 text-primary border border-primary/20 text-[10px] font-black uppercase tracking-widest hover:bg-primary/20 transition-all"
+                    >
+                      <UserPlus className="w-4 h-4" /> Adicionar Sócio
+                    </button>
+                  )}
                 </div>
 
-                <div id="partner-form" className={`grid grid-cols-1 md:grid-cols-12 gap-4 items-end p-6 rounded-2xl border transition-all duration-300 ${editingPartnerIdx !== null ? 'bg-primary/5 border-primary/30 ring-1 ring-primary/20' : 'bg-slate-50 dark:bg-surface-darker/50 border-slate-100 dark:border-surface-highlight/30'}`}>
-                  <div className="md:col-span-4 space-y-2">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Nome do Sócio</label>
-                    <input
-                      value={newPartner.name}
-                      onChange={e => setNewPartner({ ...newPartner, name: e.target.value })}
-                      className="h-10 w-full rounded-lg border border-slate-200 dark:border-surface-highlight bg-white dark:bg-surface-dark px-3 text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold"
-                      placeholder="Ex: Carlos Alberto"
-                    />
-                  </div>
-                  <div className="md:col-span-3 space-y-2">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">CPF / CNPJ</label>
-                    <input
-                      value={newPartner.cpf}
-                      onChange={e => setNewPartner({ ...newPartner, cpf: formatDocument(e.target.value) })}
-                      className="h-10 w-full rounded-lg border border-slate-200 dark:border-surface-highlight bg-white dark:bg-surface-dark px-3 text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold"
-                      placeholder="000.000.000-00"
-                    />
-                  </div>
-                  <div className="md:col-span-3 space-y-2">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Participação %</label>
-                    <input
-                      type="number"
-                      value={newPartner.participation}
-                      onChange={e => setNewPartner({ ...newPartner, participation: e.target.value })}
-                      className="h-10 w-full rounded-lg border border-slate-200 dark:border-surface-highlight bg-white dark:bg-surface-dark px-3 text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold text-right"
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={savePartner}
-                        className={`flex-1 h-10 rounded-lg flex items-center justify-center gap-2 text-xs font-black transition-all uppercase tracking-widest ${editingPartnerIdx !== null ? 'bg-primary text-background-dark shadow-lg shadow-primary/20 hover:bg-primary-hover' : 'bg-surface-highlight text-white hover:bg-slate-600'}`}
-                      >
-                        {editingPartnerIdx !== null ? <><Edit3 className="w-4 h-4" /> Salvar</> : <><UserPlus className="w-4 h-4" /> Add</>}
-                      </button>
-                      {editingPartnerIdx !== null && (
+                {(showPartnerForm || editingPartnerIdx !== null) && (
+                  <div id="partner-form" className={`grid grid-cols-1 md:grid-cols-12 gap-4 items-end p-6 rounded-2xl border transition-all duration-300 ${editingPartnerIdx !== null ? 'bg-primary/5 border-primary/30 ring-1 ring-primary/20' : 'bg-slate-50 dark:bg-surface-darker/50 border-slate-100 dark:border-surface-highlight/30'}`}>
+                    <div className="md:col-span-4 space-y-2">
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Nome do Sócio</label>
+                      <input
+                        value={newPartner.name}
+                        onChange={e => setNewPartner({ ...newPartner, name: e.target.value })}
+                        className="h-10 w-full rounded-lg border border-slate-200 dark:border-surface-highlight bg-white dark:bg-surface-dark px-3 text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold"
+                        placeholder="Ex: Carlos Alberto"
+                      />
+                    </div>
+                    <div className="md:col-span-3 space-y-2">
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">CPF / CNPJ</label>
+                      <input
+                        value={newPartner.cpf}
+                        onChange={e => setNewPartner({ ...newPartner, cpf: formatDocument(e.target.value) })}
+                        className="h-10 w-full rounded-lg border border-slate-200 dark:border-surface-highlight bg-white dark:bg-surface-dark px-3 text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold"
+                        placeholder="000.000.000-00"
+                      />
+                    </div>
+                    <div className="md:col-span-3 space-y-2">
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Participação %</label>
+                      <input
+                        type="number"
+                        value={newPartner.participation}
+                        onChange={e => setNewPartner({ ...newPartner, participation: e.target.value })}
+                        className="h-10 w-full rounded-lg border border-slate-200 dark:border-surface-highlight bg-white dark:bg-surface-dark px-3 text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold text-right"
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={savePartner}
+                          className={`flex-1 h-10 rounded-lg flex items-center justify-center gap-2 text-xs font-black transition-all uppercase tracking-widest ${editingPartnerIdx !== null ? 'bg-primary text-background-dark shadow-lg shadow-primary/20 hover:bg-primary-hover' : 'bg-surface-highlight text-white hover:bg-slate-600'}`}
+                        >
+                          {editingPartnerIdx !== null ? <><Edit3 className="w-4 h-4" /> Salvar</> : <><UserPlus className="w-4 h-4" /> Add</>}
+                        </button>
                         <button
                           type="button"
                           onClick={() => {
                             setEditingPartnerIdx(null);
+                            setShowPartnerForm(false);
                             setNewPartner({ name: '', cpf: '', participation: '' });
                           }}
                           className="px-3 h-10 rounded-lg bg-slate-200 dark:bg-surface-highlight text-slate-600 dark:text-white font-black hover:bg-slate-300 dark:hover:bg-slate-600 transition-all"
                         >
                           <X className="w-4 h-4" />
                         </button>
-                      )}
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
 
                 {partners.length > 0 && (
                   <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-surface-highlight bg-white dark:bg-surface-dark">
