@@ -75,38 +75,34 @@ const UserReg: React.FC<{ user: User }> = ({ user }) => {
       } else {
         const tempPass = generateTempPassword();
 
-        // Create a transient client to prevent session hijacking
-        const transientClient = createClient(supabaseUrl, supabaseAnonKey, {
-          auth: { persistSession: false }
-        });
-
-        const { data: authData, error: authError } = await transientClient.auth.signUp({
-          email: formData.email!,
-          password: tempPass,
-          options: {
-            data: {
-              nome: formData.nome,
-              celular: formData.celular,
-              funcao: formData.funcao,
-              role: formData.role,
-              isFirstAccess: true
-            }
+        // Invoke the Edge Function to create user and send email
+        const { data: fnData, error: fnError } = await supabase.functions.invoke('send-user-invite', {
+          body: {
+            email: formData.email,
+            nome: formData.nome,
+            role: formData.role,
+            celular: formData.celular,
+            funcao: formData.funcao,
+            tempPassword: tempPass
           }
         });
 
-        if (authError) throw authError;
+        if (fnError) throw new Error(fnError.message || 'Erro ao processar convite');
+
+        if (fnData?.error) throw new Error(fnData.error);
 
         // Success Feedback
-        alert(
-          `CONVITE GERADO COM SUCESSO!\n\n` +
-          `Usuário: ${formData.nome}\n` +
-          `E-mail: ${formData.email}\n` +
-          `Senha Provisória: ${tempPass}\n\n` +
-          `IMPORTANTE:\n` +
-          `1. Para que o e-mail seja enviado automaticamente pelo sistema via "${SENDER_EMAIL}", é necessário configurar o servidor SMTP personalizado no Painel do Supabase (Project Settings > Auth > SMTP).\n` +
-          `2. Caso o e-mail não chegue, verifique se a opção "Confirm Email" está ativada no Supabase. Se estiver ativa, o usuário deve confirmar o e-mail antes de acessar.\n` +
-          `3. Você pode copiar os dados acima e enviar manualmente ao usuário se preferir.`
-        );
+        if (fnData?.warning) {
+          alert(`AVISO: ${fnData.warning}\n\nO usuário foi criado, mas houve um problema com o email. Detalhes: ${fnData.details}`);
+        } else {
+          alert(
+            `CONVITE ENVIADO COM SUCESSO!\n\n` +
+            `Um e-mail de boas-vindas foi enviado para ${formData.email} com os dados de acesso.\n\n` +
+            `Dados de Contingência (caso o e-mail não chegue):\n` +
+            `Usuário: ${formData.nome}\n` +
+            `Senha Provisória: ${tempPass}`
+          );
+        }
       }
 
       closeForm();
@@ -202,99 +198,101 @@ const UserReg: React.FC<{ user: User }> = ({ user }) => {
       </div>
 
       {showForm && (
-        <div className="bg-white dark:bg-surface-dark border border-slate-200 dark:border-surface-highlight rounded-3xl p-8 shadow-2xl animate-in fade-in slide-in-from-top-4 duration-300">
-          <div className="flex justify-between items-center mb-10 border-b border-slate-100 dark:border-surface-highlight pb-6">
-            <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
-              {editingUserId ? 'Editar Usuário' : 'Novo Cadastro'}
-            </h3>
-            <button onClick={closeForm} className="text-slate-400 hover:text-danger transition-colors">
-              <span className="material-symbols-outlined">close</span>
-            </button>
-          </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-surface-dark border border-slate-200 dark:border-surface-highlight rounded-3xl p-8 shadow-2xl w-full max-w-2xl animate-in slide-in-from-bottom-4 duration-300">
+            <div className="flex justify-between items-center mb-10 border-b border-slate-100 dark:border-surface-highlight pb-6">
+              <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                {editingUserId ? 'Editar Usuário' : 'Novo Cadastro'}
+              </h3>
+              <button onClick={closeForm} className="text-slate-400 hover:text-danger transition-colors">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
 
-          <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-2">
-              <label className="text-xs font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">Nome Completo</label>
-              <input
-                required
-                value={formData.nome}
-                onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
-                className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold"
-                placeholder="Ex: João Silva"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">E-mail (Login)</label>
-              <input
-                type="email"
-                required
-                className="w-full h-12 bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-surface-highlight rounded-xl px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold"
-                value={formData.email}
-                onChange={e => setFormData({ ...formData, email: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">Celular</label>
-              <input
-                className="w-full h-12 bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-surface-highlight rounded-xl px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold"
-                value={formData.celular}
-                onChange={e => setFormData({ ...formData, celular: formatPhone(e.target.value) })}
-                placeholder="(00) 00000-0000"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">Função / Cargo</label>
-              <input
-                className="w-full h-12 bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-surface-highlight rounded-xl px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold"
-                value={formData.funcao}
-                onChange={e => setFormData({ ...formData, funcao: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2 md:col-span-2">
-              <label className="text-[10px] font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">Perfil de Acesso</label>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+            <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-2">
+                <label className="text-xs font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">Nome Completo</label>
+                <input
+                  required
+                  value={formData.nome}
+                  onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
+                  className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold"
+                  placeholder="Ex: João Silva"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">E-mail (Login)</label>
+                <input
+                  type="email"
+                  required
+                  className="w-full h-12 bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-surface-highlight rounded-xl px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold"
+                  value={formData.email}
+                  onChange={e => setFormData({ ...formData, email: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">Celular</label>
+                <input
+                  className="w-full h-12 bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-surface-highlight rounded-xl px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold"
+                  value={formData.celular}
+                  onChange={e => setFormData({ ...formData, celular: formatPhone(e.target.value) })}
+                  placeholder="(00) 00000-0000"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">Função / Cargo</label>
+                <input
+                  className="w-full h-12 bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-surface-highlight rounded-xl px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold"
+                  value={formData.funcao}
+                  onChange={e => setFormData({ ...formData, funcao: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-[10px] font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">Perfil de Acesso</label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, role: 'MASTER_ADMIN' })}
+                    className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${formData.role === 'MASTER_ADMIN' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 dark:border-surface-highlight text-slate-400'}`}
+                  >
+                    <ShieldCheck className="w-5 h-5 mb-1" />
+                    <span className="text-[9px] font-black uppercase tracking-widest">Master Admin</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, role: 'ADMIN' })}
+                    className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${formData.role === 'ADMIN' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 dark:border-surface-highlight text-slate-400'}`}
+                  >
+                    <Edit3 className="w-5 h-5 mb-1" />
+                    <span className="text-[9px] font-black uppercase tracking-widest">Administrador</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, role: 'USER' })}
+                    className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${formData.role === 'USER' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 dark:border-surface-highlight text-slate-400'}`}
+                  >
+                    <Search className="w-5 h-5 mb-1" />
+                    <span className="text-[9px] font-black uppercase tracking-widest">Usuário</span>
+                  </button>
+                </div>
+              </div>
+              <div className="md:col-span-2 flex justify-end gap-4 pt-4">
                 <button
                   type="button"
-                  onClick={() => setFormData({ ...formData, role: 'MASTER_ADMIN' })}
-                  className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${formData.role === 'MASTER_ADMIN' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 dark:border-surface-highlight text-slate-400'}`}
+                  onClick={closeForm}
+                  className="px-8 h-12 border border-slate-200 dark:border-surface-highlight text-slate-600 dark:text-text-secondary font-black rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all text-xs tracking-widest"
                 >
-                  <ShieldCheck className="w-5 h-5 mb-1" />
-                  <span className="text-[9px] font-black uppercase tracking-widest">Master Admin</span>
+                  CANCELAR
                 </button>
                 <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, role: 'ADMIN' })}
-                  className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${formData.role === 'ADMIN' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 dark:border-surface-highlight text-slate-400'}`}
+                  disabled={saving}
+                  className="px-10 h-12 bg-primary text-background-dark font-black rounded-xl shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
                 >
-                  <Edit3 className="w-5 h-5 mb-1" />
-                  <span className="text-[9px] font-black uppercase tracking-widest">Administrador</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, role: 'USER' })}
-                  className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${formData.role === 'USER' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 dark:border-surface-highlight text-slate-400'}`}
-                >
-                  <Search className="w-5 h-5 mb-1" />
-                  <span className="text-[9px] font-black uppercase tracking-widest">Usuário</span>
+                  {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : editingUserId ? 'SALVAR ALTERAÇÕES' : 'ENVIAR CONVITE'}
                 </button>
               </div>
-            </div>
-            <div className="md:col-span-2 flex justify-end gap-4 pt-4">
-              <button
-                type="button"
-                onClick={closeForm}
-                className="px-8 h-12 border border-slate-200 dark:border-surface-highlight text-slate-600 dark:text-text-secondary font-black rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all text-xs tracking-widest"
-              >
-                CANCELAR
-              </button>
-              <button
-                disabled={saving}
-                className="px-10 h-12 bg-primary text-background-dark font-black rounded-xl shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
-              >
-                {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : editingUserId ? 'SALVAR ALTERAÇÕES' : 'ENVIAR CONVITE'}
-              </button>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
       )}
 
