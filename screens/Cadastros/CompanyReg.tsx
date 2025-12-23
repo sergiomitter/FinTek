@@ -160,6 +160,19 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
       return;
     }
 
+    const cleanDoc = newPartner.cpf.replace(/\D/g, '');
+    let isValid = false;
+    if (cleanDoc.length === 11) {
+      isValid = validateCPF(cleanDoc);
+    } else if (cleanDoc.length === 14) {
+      isValid = validateCNPJ(cleanDoc);
+    }
+
+    if (!isValid) {
+      alert('CPF ou CNPJ do sócio é inválido. Verifique os dados e tente novamente.');
+      return;
+    }
+
     if (editingPartnerIdx !== null) {
       const updatedPartners = [...partners];
       updatedPartners[editingPartnerIdx] = { ...newPartner };
