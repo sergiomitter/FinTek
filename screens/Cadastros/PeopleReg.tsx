@@ -29,6 +29,7 @@ const PeopleReg: React.FC<{ user: User }> = ({ user }) => {
 
   const [formData, setFormData] = useState({
     name: '',
+    nickname: '',
     cpf: '',
     email: '',
     phone: '',
@@ -92,7 +93,7 @@ const PeopleReg: React.FC<{ user: User }> = ({ user }) => {
     } else {
       setShowForm(false);
       setEditingId(null);
-      setFormData({ name: '', cpf: '', email: '', phone: '', birth_date: '' });
+      setFormData({ name: '', nickname: '', cpf: '', email: '', phone: '', birth_date: '' });
       fetchPeople();
     }
     setSaving(false);
@@ -130,6 +131,7 @@ const PeopleReg: React.FC<{ user: User }> = ({ user }) => {
     setEditingId(person.id);
     setFormData({
       name: person.name || '',
+      nickname: person.nickname || '',
       cpf: person.cpf || '',
       email: person.email || '',
       phone: person.phone || '',
@@ -154,7 +156,7 @@ const PeopleReg: React.FC<{ user: User }> = ({ user }) => {
           <button
             onClick={() => {
               setEditingId(null);
-              setFormData({ name: '', cpf: '', email: '', phone: '', birth_date: '' });
+              setFormData({ name: '', nickname: '', cpf: '', email: '', phone: '', birth_date: '' });
               setShowForm(true);
             }}
             className="px-8 h-12 rounded-xl bg-primary text-background-dark font-black shadow-lg shadow-primary/20 flex items-center gap-2 hover:scale-[1.02] transition-all"
@@ -207,7 +209,14 @@ const PeopleReg: React.FC<{ user: User }> = ({ user }) => {
                           <UserIcon className="w-5 h-5" />
                         </div>
                         <div className="flex flex-col">
-                          <span className="font-bold text-slate-900 dark:text-white">{p.name}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-slate-900 dark:text-white">{p.name}</span>
+                            {p.nickname && (
+                              <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-black uppercase tracking-wider">
+                                {p.nickname}
+                              </span>
+                            )}
+                          </div>
                           {p.birth_date && (
                             <span className="text-[10px] text-slate-400 font-medium">Nasc: {new Date(p.birth_date).toLocaleDateString()}</span>
                           )}
@@ -292,6 +301,15 @@ const PeopleReg: React.FC<{ user: User }> = ({ user }) => {
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                     className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold transition-all"
                     placeholder="Ex: João da Silva"
+                  />
+                </div>
+                <div className="md:col-span-2 space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Apelido</label>
+                  <input
+                    value={formData.nickname}
+                    onChange={(e) => setFormData(prev => ({ ...prev, nickname: e.target.value }))}
+                    className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold transition-all"
+                    placeholder="Como a pessoa é conhecida"
                   />
                 </div>
                 <div className="space-y-2">
