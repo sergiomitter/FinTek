@@ -36,3 +36,12 @@ export interface User {
   password?: string;
   isFirstAccess: boolean;
 }
+
+export interface Company {
+  id: string;
+  name: string; // Nome Fantasia
+  cnpj: string;
+  razao_social: string;
+  email: string;
+  created_at?: string;
+}

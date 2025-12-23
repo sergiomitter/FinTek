@@ -1,20 +1,46 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { validateCNPJ, formatCNPJ } from '../../utils/helpers';
-// Fix: Import User type
-import { User } from '../../types';
+import { User, Company } from '../../types';
+import { supabase } from '../../lib/supabase';
+import { Edit3, Trash2, PlusCircle, Building2, Search, X } from 'lucide-react';
 
-// Fix: Add user prop
 const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [showForm, setShowForm] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+
   const [formData, setFormData] = useState({
     cnpj: '',
     razaoSocial: '',
     nomeFantasia: '',
     email: ''
   });
+
+  useEffect(() => {
+    fetchCompanies();
+  }, []);
+
+  const fetchCompanies = async () => {
+    setFetching(true);
+    const { data, error } = await supabase
+      .from('companies')
+      .select('*')
+      .order('name');
+
+    if (error) {
+      console.error('Error fetching companies:', error);
+    } else {
+      setCompanies(data || []);
+    }
+    setFetching(false);
+  };
 
   const handleCNPJChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = formatCNPJ(e.target.value);
@@ -47,35 +73,137 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
     }
   };
 
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+
+    const payload = {
+      cnpj: formData.cnpj,
+      razao_social: formData.razaoSocial,
+      name: formData.nomeFantasia,
+      email: formData.email
+    };
+
+    let result;
+    if (editingId) {
+      result = await supabase
+        .from('companies')
+        .update(payload)
+        .eq('id', editingId);
+    } else {
+      result = await supabase
+        .from('companies')
+        .insert([payload]);
+    }
+
+    if (result.error) {
+      alert('Erro ao salvar empresa: ' + result.error.message);
+    } else {
+      resetForm();
+      fetchCompanies();
+    }
+    setSaving(false);
+  };
+
+  const handleEdit = (company: Company) => {
+    setFormData({
+      cnpj: company.cnpj || '',
+      razaoSocial: company.razao_social || '',
+      nomeFantasia: company.name || '',
+      email: company.email || ''
+    });
+    setEditingId(company.id);
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleDelete = async (id: string, name: string) => {
+    if (confirm(`Deseja realmente excluir a empresa "${name}"? Esta ação não pode ser desfeita.`)) {
+      const { error } = await supabase
+        .from('companies')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        alert('Erro ao excluir empresa: ' + error.message);
+      } else {
+        fetchCompanies();
+      }
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({ cnpj: '', razaoSocial: '', nomeFantasia: '', email: '' });
+    setEditingId(null);
+    setShowForm(false);
+    setError('');
+  };
+
+  const filteredCompanies = companies.filter(c =>
+    c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    c.cnpj?.includes(searchTerm) ||
+    c.razao_social?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <div className="p-6 lg:p-10 max-w-[1024px] mx-auto space-y-10">
-      <div className="flex items-center gap-2 text-sm">
-        <Link to="/" className="text-slate-500 dark:text-[#9db9a6] hover:text-slate-900 dark:hover:text-white transition-colors">Home</Link>
-        <span className="text-slate-300 dark:text-surface-highlight">/</span>
-        <span className="text-primary font-bold">Cadastro de Empresa</span>
+    <div className="p-6 lg:p-10 max-w-7xl mx-auto space-y-10">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-sm">
+            <Link to="/" className="text-slate-500 dark:text-[#9db9a6] hover:text-slate-900 dark:hover:text-white transition-colors">Home</Link>
+            <span className="text-slate-300 dark:text-surface-highlight">/</span>
+            <span className="text-primary font-bold">Empresas</span>
+          </div>
+          <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">Gestão de Empresas</h1>
+          <p className="text-slate-600 dark:text-text-secondary text-base">Visualize e gerencie as empresas cadastradas no sistema.</p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Buscar empresa..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="pl-11 pr-4 h-12 rounded-xl border border-slate-200 dark:border-surface-highlight bg-white dark:bg-surface-dark text-slate-900 dark:text-white text-sm font-bold w-64 focus:ring-2 focus:ring-primary outline-none transition-all"
+            />
+          </div>
+          <button
+            onClick={() => {
+              if (showForm && !editingId) setShowForm(false);
+              else {
+                resetForm();
+                setShowForm(true);
+              }
+            }}
+            className={`flex items-center gap-2 px-6 h-12 rounded-xl transition-all font-black text-sm shadow-lg ${showForm && !editingId ? 'bg-slate-200 dark:bg-surface-highlight text-slate-900 dark:text-white' : 'bg-primary text-background-dark shadow-primary/20 hover:bg-primary-hover'}`}
+          >
+            {showForm && !editingId ? <><X className="w-4 h-4" /> Cancelar</> : <><PlusCircle className="w-4 h-4" /> Adicionar Empresa</>}
+          </button>
+        </div>
       </div>
 
-      <div className="flex flex-col gap-4 border-b border-slate-200 dark:border-surface-highlight pb-8">
-        <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">Nova Empresa</h1>
-        <p className="text-slate-600 dark:text-text-secondary text-base font-normal">Preencha as informações necessárias. O sistema buscará dados automaticamente pelo CNPJ.</p>
-      </div>
+      {showForm && (
+        <div className="bg-white dark:bg-surface-dark border border-slate-200 dark:border-surface-highlight rounded-2xl p-8 shadow-2xl animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="flex items-center gap-3 mb-8 border-b border-slate-200 dark:border-surface-highlight pb-6">
+            <Building2 className="text-primary w-8 h-8" />
+            <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
+              {editingId ? 'Editar Empresa' : 'Novo Cadastro de Empresa'}
+            </h3>
+          </div>
 
-      <div className="bg-white dark:bg-surface-dark border border-slate-200 dark:border-surface-highlight rounded-2xl p-8 shadow-sm">
-        <form className="space-y-12">
-          <div className="space-y-8">
-            <div className="flex items-center gap-3 border-b border-slate-200 dark:border-surface-highlight pb-4">
-              <span className="material-symbols-outlined text-primary text-2xl">domain</span>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Dados Gerais</h3>
-            </div>
+          <form onSubmit={handleSave} className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
               <div className="md:col-span-4 space-y-2 relative">
                 <label className="text-xs font-black text-slate-600 dark:text-[#9db9a6] uppercase tracking-widest">CNPJ</label>
                 <div className="relative">
-                  <input 
+                  <input
+                    required
                     value={formData.cnpj}
                     onChange={handleCNPJChange}
-                    className={`h-12 w-full rounded-xl border ${error ? 'border-danger' : 'border-slate-200 dark:border-surface-highlight'} bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold`} 
-                    placeholder="00.000.000/0000-00" 
+                    className={`h-12 w-full rounded-xl border ${error ? 'border-danger' : 'border-slate-200 dark:border-surface-highlight'} bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold`}
+                    placeholder="00.000.000/0000-00"
                   />
                   {loading && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -87,42 +215,112 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
               </div>
               <div className="md:col-span-8 space-y-2">
                 <label className="text-xs font-black text-slate-600 dark:text-[#9db9a6] uppercase tracking-widest">Razão Social</label>
-                <input 
+                <input
+                  required
                   value={formData.razaoSocial}
                   onChange={(e) => setFormData(prev => ({ ...prev, razaoSocial: e.target.value }))}
-                  className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold" 
-                  placeholder="Preenchido automaticamente" 
+                  className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold"
+                  placeholder="Razão Social da Empresa"
                 />
               </div>
               <div className="md:col-span-6 space-y-2">
                 <label className="text-xs font-black text-slate-600 dark:text-[#9db9a6] uppercase tracking-widest">Nome Fantasia</label>
-                <input 
+                <input
+                  required
                   value={formData.nomeFantasia}
                   onChange={(e) => setFormData(prev => ({ ...prev, nomeFantasia: e.target.value }))}
-                  className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold" 
-                  placeholder="Nome comercial" 
+                  className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold"
+                  placeholder="Nome comercial"
                 />
               </div>
               <div className="md:col-span-6 space-y-2">
                 <label className="text-xs font-black text-slate-600 dark:text-[#9db9a6] uppercase tracking-widest">Email Corporativo</label>
-                <input 
+                <input
+                  required
                   value={formData.email}
                   onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold" 
-                  type="email" 
-                  placeholder="contato@empresa.com.br" 
+                  className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold"
+                  type="email"
+                  placeholder="contato@empresa.com.br"
                 />
               </div>
             </div>
-          </div>
 
-          <div className="flex flex-col-reverse sm:flex-row justify-end gap-4 pt-8 border-t border-slate-200 dark:border-surface-highlight">
-            <button type="button" className="px-8 h-12 rounded-xl border border-slate-200 dark:border-surface-highlight text-slate-900 dark:text-white font-black hover:bg-slate-100 dark:hover:bg-white/5 transition-all uppercase tracking-widest text-xs">Cancelar</button>
-            <button className="px-10 h-12 rounded-xl bg-primary text-background-dark font-black shadow-lg shadow-primary/20 flex items-center justify-center gap-2 hover:bg-primary-hover transition-all">
-              <span className="material-symbols-outlined">save</span> Salvar Empresa
-            </button>
-          </div>
-        </form>
+            <div className="flex justify-end gap-4 pt-4 border-t border-slate-100 dark:border-surface-highlight">
+              <button
+                type="button"
+                onClick={resetForm}
+                className="px-8 h-12 rounded-xl border border-slate-200 dark:border-surface-highlight text-slate-900 dark:text-white font-black hover:bg-slate-50 dark:hover:bg-white/5 transition-all uppercase tracking-widest text-xs"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={saving}
+                className="px-10 h-12 rounded-xl bg-primary text-background-dark font-black shadow-lg shadow-primary/20 flex items-center justify-center gap-2 hover:bg-primary-hover transition-all disabled:opacity-50"
+              >
+                {saving ? (
+                  <div className="size-5 border-2 border-background-dark border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <><PlusCircle className="w-4 h-4" /> {editingId ? 'Salvar Alterações' : 'Cadastrar Empresa'}</>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      <div className="bg-white dark:bg-surface-dark border border-slate-200 dark:border-surface-highlight rounded-2xl overflow-hidden shadow-sm">
+        <div className="overflow-x-auto">
+          {fetching ? (
+            <div className="p-20 text-center text-slate-500 font-bold uppercase tracking-widest animate-pulse">Carregando empresas...</div>
+          ) : filteredCompanies.length === 0 ? (
+            <div className="p-20 text-center text-slate-400 font-bold uppercase tracking-widest">Nenhuma empresa encontrada.</div>
+          ) : (
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50 dark:bg-surface-highlight/30 text-[10px] uppercase font-black tracking-widest text-slate-500 dark:text-text-secondary border-b border-slate-200 dark:border-surface-highlight">
+                  <th className="px-8 py-5">Nome Fantasia / Razão Social</th>
+                  <th className="px-8 py-5">CNPJ</th>
+                  <th className="px-8 py-5">E-mail</th>
+                  <th className="px-8 py-5 text-center">Ações</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-surface-highlight">
+                {filteredCompanies.map((company) => (
+                  <tr key={company.id} className="hover:bg-slate-50 dark:hover:bg-surface-highlight/10 transition-colors group">
+                    <td className="px-8 py-5">
+                      <div className="flex flex-col">
+                        <span className="font-black text-slate-900 dark:text-white text-sm">{company.name}</span>
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-text-secondary uppercase tracking-wider line-clamp-1">{company.razao_social}</span>
+                      </div>
+                    </td>
+                    <td className="px-8 py-5 text-sm font-bold text-slate-600 dark:text-slate-300 whitespace-nowrap">{company.cnpj}</td>
+                    <td className="px-8 py-5 text-sm font-bold text-slate-600 dark:text-slate-300">{company.email}</td>
+                    <td className="px-8 py-5">
+                      <div className="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                        <button
+                          onClick={() => handleEdit(company)}
+                          className="p-2.5 hover:bg-blue-500/10 text-slate-400 hover:text-blue-500 rounded-xl transition-all"
+                          title="Editar"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(company.id, company.name)}
+                          className="p-2.5 hover:bg-danger/10 text-slate-400 hover:text-danger rounded-xl transition-all"
+                          title="Excluir"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
     </div>
   );
