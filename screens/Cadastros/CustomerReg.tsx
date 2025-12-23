@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { validateCNPJ, formatCNPJ, validateCPF, formatCPF, formatDocument, formatCEP } from '../../utils/helpers';
+import { validateCNPJ, formatCNPJ, validateCPF, formatCPF, formatDocument, formatCEP, formatPhone } from '../../utils/helpers';
 import { User } from '../../types';
 import {
   Plus,
@@ -374,7 +374,7 @@ const CustomerReg: React.FC<{ user: User }> = ({ user }) => {
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Telefone</label>
                   <input
                     value={formData.phone}
-                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, phone: formatPhone(e.target.value) }))}
                     className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold transition-all"
                     placeholder="(00) 00000-0000"
                   />
