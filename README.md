@@ -13,8 +13,24 @@ View your app in AI Studio: https://ai.studio/apps/temp/1
 **Prerequisites:**  Node.js
 
 
-1. Install dependencies:
+## Implantação na Vercel
+
+### Variáveis de Ambiente
+
+Para que o projeto funcione corretamente na Vercel, configure as seguintes Variáveis de Ambiente no dashboard da Vercel:
+
+- `VITE_SUPABASE_URL`: Sua URL do Supabase.
+- `VITE_SUPABASE_ANON_KEY`: Sua Anon Key do Supabase.
+- `GEMINI_API_KEY`: Sua chave de API do Gemini.
+
+### Configuração de Rotas
+
+O arquivo `vercel.json` já está configurado para garantir que as rotas do React (SPA) funcionem corretamente após o deploy.
+
+---
+
+1. Instale as dependências:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
+2. Configure a `GEMINI_API_KEY` no [.env.local](.env.local) (ou utilize as variáveis acima no Vercel).
+3. Execute o app:
    `npm run dev`
