@@ -325,7 +325,7 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
 
           <form onSubmit={handleSave} className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-              <div className="md:col-span-4 space-y-2 relative">
+              <div className="md:col-span-12 space-y-2 relative">
                 <label className="text-xs font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">CPF / CNPJ</label>
                 <div className="relative">
                   <input
@@ -407,6 +407,7 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
                     <div className="md:col-span-3 space-y-2">
                       <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">CPF / CNPJ</label>
                       <input
+                        required
                         value={newPartner.cpf}
                         onChange={e => setNewPartner({ ...newPartner, cpf: formatDocument(e.target.value) })}
                         className="h-10 w-full rounded-lg border border-slate-200 dark:border-surface-highlight bg-white dark:bg-surface-dark px-3 text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold"

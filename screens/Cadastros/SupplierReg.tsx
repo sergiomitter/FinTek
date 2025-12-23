@@ -10,7 +10,6 @@ import {
   Trash2,
   X,
   Loader2,
-  LocalShipping,
   ShieldCheck,
   ShieldAlert,
   Building2,
@@ -301,6 +300,17 @@ const SupplierReg: React.FC<{ user: User }> = ({ user }) => {
             <form onSubmit={handleSave} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2 space-y-2">
+                  <label className="text-xs font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">CNPJ / CPF</label>
+                  <input
+                    required
+                    value={formData.cnpj_cpf}
+                    onChange={handleDocChange}
+                    className={`h-12 w-full rounded-xl border ${error ? 'border-danger' : 'border-slate-200 dark:border-surface-highlight'} bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold transition-all`}
+                    placeholder="00.000.000/0000-00"
+                  />
+                  {error && <p className="text-[10px] text-danger font-black uppercase tracking-wider">{error}</p>}
+                </div>
+                <div className="md:col-span-2 space-y-2">
                   <label className="text-xs font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">Razão Social / Nome</label>
                   <input
                     required
@@ -309,16 +319,6 @@ const SupplierReg: React.FC<{ user: User }> = ({ user }) => {
                     className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold transition-all"
                     placeholder="Ex: Fornecedor de Serviços Ltda"
                   />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">CNPJ / CPF</label>
-                  <input
-                    value={formData.cnpj_cpf}
-                    onChange={handleDocChange}
-                    className={`h-12 w-full rounded-xl border ${error ? 'border-danger' : 'border-slate-200 dark:border-surface-highlight'} bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold transition-all`}
-                    placeholder="00.000.000/0000-00"
-                  />
-                  {error && <p className="text-[10px] text-danger font-black uppercase tracking-wider">{error}</p>}
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">Telefone</label>

@@ -274,6 +274,17 @@ const PeopleReg: React.FC<{ user: User }> = ({ user }) => {
             <form onSubmit={handleSave} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2 space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">CPF</label>
+                  <input
+                    required
+                    value={formData.cpf}
+                    onChange={handleCPFChange}
+                    className={`h-12 w-full rounded-xl border ${error ? 'border-danger' : 'border-slate-200 dark:border-surface-highlight'} bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold transition-all`}
+                    placeholder="000.000.000-00"
+                  />
+                  {error && <p className="text-[10px] text-danger font-black uppercase tracking-wider mt-1">{error}</p>}
+                </div>
+                <div className="md:col-span-2 space-y-2">
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Nome Completo</label>
                   <input
                     required
@@ -282,16 +293,6 @@ const PeopleReg: React.FC<{ user: User }> = ({ user }) => {
                     className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold transition-all"
                     placeholder="Ex: João da Silva"
                   />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">CPF</label>
-                  <input
-                    value={formData.cpf}
-                    onChange={handleCPFChange}
-                    className={`h-12 w-full rounded-xl border ${error ? 'border-danger' : 'border-slate-200 dark:border-surface-highlight'} bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold transition-all`}
-                    placeholder="000.000.000-00"
-                  />
-                  {error && <p className="text-[10px] text-danger font-black uppercase tracking-wider mt-1">{error}</p>}
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Data de Nascimento</label>
