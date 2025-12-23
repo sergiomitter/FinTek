@@ -235,7 +235,7 @@ const Login: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-background-dark p-6">
       <div className="w-full max-w-md bg-surface-dark border border-surface-highlight rounded-3xl p-10 shadow-2xl animate-in fade-in duration-500">
         <div className="flex justify-center mb-10">
-          <div className="size-16 rounded-3xl bg-primary flex items-center justify-center shadow-[0_0_30px_rgba(19,236,91,0.3)]">
+          <div className="size-16 rounded-3xl bg-primary flex items-center justify-center shadow-[0_0_30px_rgba(59,130,246,0.3)]">
             <span className="material-symbols-outlined text-background-dark text-4xl">account_balance_wallet</span>
           </div>
         </div>

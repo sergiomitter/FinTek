@@ -50,11 +50,11 @@ const Receivable: React.FC<{ user: User }> = ({ user }) => {
           <form className="space-y-6">
             <div className="space-y-2">
               <label className="text-xs font-bold text-text-secondary uppercase tracking-widest">Descrição</label>
-              <input className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary" placeholder="Ex: Consultoria Mensal" />
+              <input className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary" placeholder="Ex: Consultoria Mensal" />
             </div>
             <div className="space-y-2">
               <label className="text-xs font-bold text-text-secondary uppercase tracking-widest">Cliente</label>
-              <select className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary appearance-none">
+              <select className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary appearance-none">
                 <option disabled selected>Selecione o cliente...</option>
                 <option>Tech Solutions Ltda</option>
                 <option>Consultoria Alpha</option>
@@ -63,7 +63,7 @@ const Receivable: React.FC<{ user: User }> = ({ user }) => {
             </div>
             <div className="space-y-2">
               <label className="text-xs font-bold text-text-secondary uppercase tracking-widest">Empresa Destino</label>
-              <select className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary appearance-none">
+              <select className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary appearance-none">
                 <option disabled selected>Selecione sua empresa...</option>
                 <option>Tech Solutions LTDA</option>
                 <option>Matriz Holding</option>
@@ -71,7 +71,7 @@ const Receivable: React.FC<{ user: User }> = ({ user }) => {
             </div>
             <div className="space-y-2">
               <label className="text-xs font-bold text-text-secondary uppercase tracking-widest">Banco para Crédito</label>
-              <select className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary appearance-none">
+              <select className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary appearance-none">
                 <option disabled selected>Selecione a conta...</option>
                 <option>Nubank - Operacional</option>
                 <option>Itaú - Reserva</option>
@@ -80,11 +80,11 @@ const Receivable: React.FC<{ user: User }> = ({ user }) => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-xs font-bold text-text-secondary uppercase tracking-widest">Valor</label>
-                <input className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white text-right" placeholder="0,00" />
+                <input className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white text-right" placeholder="0,00" />
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold text-text-secondary uppercase tracking-widest">Vencimento</label>
-                <input className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white" type="date" />
+                <input className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white" type="date" />
               </div>
             </div>
             <button className="w-full rounded-xl bg-primary py-4 text-sm font-black text-background-dark shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform">

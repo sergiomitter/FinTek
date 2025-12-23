@@ -150,7 +150,7 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm">
-            <Link to="/" className="text-slate-500 dark:text-[#9db9a6] hover:text-slate-900 dark:hover:text-white transition-colors">Home</Link>
+            <Link to="/" className="text-slate-500 dark:text-text-secondary hover:text-slate-900 dark:hover:text-white transition-colors">Home</Link>
             <span className="text-slate-300 dark:text-surface-highlight">/</span>
             <span className="text-primary font-bold">Empresas</span>
           </div>
@@ -196,13 +196,13 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
           <form onSubmit={handleSave} className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
               <div className="md:col-span-4 space-y-2 relative">
-                <label className="text-xs font-black text-slate-600 dark:text-[#9db9a6] uppercase tracking-widest">CNPJ</label>
+                <label className="text-xs font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">CNPJ</label>
                 <div className="relative">
                   <input
                     required
                     value={formData.cnpj}
                     onChange={handleCNPJChange}
-                    className={`h-12 w-full rounded-xl border ${error ? 'border-danger' : 'border-slate-200 dark:border-surface-highlight'} bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold`}
+                    className={`h-12 w-full rounded-xl border ${error ? 'border-danger' : 'border-slate-200 dark:border-surface-highlight'} bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold`}
                     placeholder="00.000.000/0000-00"
                   />
                   {loading && (
@@ -214,32 +214,32 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
                 {error && <p className="text-[10px] text-danger font-black uppercase tracking-wider">{error}</p>}
               </div>
               <div className="md:col-span-8 space-y-2">
-                <label className="text-xs font-black text-slate-600 dark:text-[#9db9a6] uppercase tracking-widest">Razão Social</label>
+                <label className="text-xs font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">Razão Social</label>
                 <input
                   required
                   value={formData.razaoSocial}
                   onChange={(e) => setFormData(prev => ({ ...prev, razaoSocial: e.target.value }))}
-                  className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold"
+                  className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold"
                   placeholder="Razão Social da Empresa"
                 />
               </div>
               <div className="md:col-span-6 space-y-2">
-                <label className="text-xs font-black text-slate-600 dark:text-[#9db9a6] uppercase tracking-widest">Nome Fantasia</label>
+                <label className="text-xs font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">Nome Fantasia</label>
                 <input
                   required
                   value={formData.nomeFantasia}
                   onChange={(e) => setFormData(prev => ({ ...prev, nomeFantasia: e.target.value }))}
-                  className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold"
+                  className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold"
                   placeholder="Nome comercial"
                 />
               </div>
               <div className="md:col-span-6 space-y-2">
-                <label className="text-xs font-black text-slate-600 dark:text-[#9db9a6] uppercase tracking-widest">Email Corporativo</label>
+                <label className="text-xs font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">Email Corporativo</label>
                 <input
                   required
                   value={formData.email}
                   onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold"
+                  className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold"
                   type="email"
                   placeholder="contato@empresa.com.br"
                 />

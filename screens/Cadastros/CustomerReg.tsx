@@ -10,7 +10,7 @@ const CustomerReg: React.FC<{ user: User }> = ({ user }) => {
   const [loading, setLoading] = useState(false);
   const [loadingCEP, setLoadingCEP] = useState(false);
   const [error, setError] = useState('');
-  
+
   const [formData, setFormData] = useState({
     cnpj: '',
     nome: '',
@@ -57,7 +57,7 @@ const CustomerReg: React.FC<{ user: User }> = ({ user }) => {
   const handleCEPChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = formatCEP(e.target.value);
     setFormData(prev => ({ ...prev, cep: value }));
-    
+
     const cleanValue = value.replace(/\D/g, '');
     if (cleanValue.length === 8) {
       setLoadingCEP(true);
@@ -104,11 +104,11 @@ const CustomerReg: React.FC<{ user: User }> = ({ user }) => {
               <div className="md:col-span-4 space-y-2">
                 <label className="text-xs font-black text-slate-600 dark:text-[#9db9a6] uppercase tracking-widest">CNPJ</label>
                 <div className="relative">
-                  <input 
+                  <input
                     value={formData.cnpj}
                     onChange={handleCNPJChange}
-                    className={`h-12 w-full rounded-xl border ${error ? 'border-danger' : 'border-slate-200 dark:border-surface-highlight'} bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold`} 
-                    placeholder="00.000.000/0000-00" 
+                    className={`h-12 w-full rounded-xl border ${error ? 'border-danger' : 'border-slate-200 dark:border-surface-highlight'} bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold`}
+                    placeholder="00.000.000/0000-00"
                   />
                   {loading && <div className="absolute right-3 top-1/2 -translate-y-1/2 size-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>}
                 </div>
@@ -116,11 +116,11 @@ const CustomerReg: React.FC<{ user: User }> = ({ user }) => {
               </div>
               <div className="md:col-span-8 space-y-2">
                 <label className="text-xs font-black text-slate-600 dark:text-[#9db9a6] uppercase tracking-widest">Nome do Cliente / Razão Social</label>
-                <input 
+                <input
                   value={formData.nome}
                   onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
-                  className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold" 
-                  placeholder="Nome completo ou Razão Social" 
+                  className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold"
+                  placeholder="Nome completo ou Razão Social"
                 />
               </div>
             </div>
@@ -133,52 +133,52 @@ const CustomerReg: React.FC<{ user: User }> = ({ user }) => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
               <div className="md:col-span-3 space-y-2">
-                <label className="text-xs font-black text-slate-600 dark:text-[#9db9a6] uppercase tracking-widest">CEP</label>
+                <label className="text-xs font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">CEP</label>
                 <div className="relative">
-                  <input 
+                  <input
                     value={formData.cep}
                     onChange={handleCEPChange}
-                    className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold" 
-                    placeholder="00000-000" 
+                    className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold"
+                    placeholder="00000-000"
                   />
                   {loadingCEP && <div className="absolute right-3 top-1/2 -translate-y-1/2 size-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>}
                 </div>
               </div>
               <div className="md:col-span-9 space-y-2">
-                <label className="text-xs font-black text-slate-600 dark:text-[#9db9a6] uppercase tracking-widest">Logradouro (Rua, Av.)</label>
-                <input 
+                <label className="text-xs font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">Logradouro (Rua, Av.)</label>
+                <input
                   value={formData.logradouro}
                   onChange={(e) => setFormData(prev => ({ ...prev, logradouro: e.target.value }))}
-                  className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold" 
-                  placeholder="Rua das Flores, 123" 
+                  className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold"
+                  placeholder="Rua das Flores, 123"
                 />
               </div>
               <div className="md:col-span-5 space-y-2">
                 <label className="text-xs font-black text-slate-600 dark:text-[#9db9a6] uppercase tracking-widest">Bairro</label>
-                <input 
+                <input
                   value={formData.bairro}
                   onChange={(e) => setFormData(prev => ({ ...prev, bairro: e.target.value }))}
-                  className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold" 
-                  placeholder="Centro" 
+                  className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold"
+                  placeholder="Centro"
                 />
               </div>
               <div className="md:col-span-5 space-y-2">
                 <label className="text-xs font-black text-slate-600 dark:text-[#9db9a6] uppercase tracking-widest">Cidade</label>
-                <input 
+                <input
                   value={formData.cidade}
                   onChange={(e) => setFormData(prev => ({ ...prev, cidade: e.target.value }))}
-                  className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold" 
-                  placeholder="São Paulo" 
+                  className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold"
+                  placeholder="São Paulo"
                 />
               </div>
               <div className="md:col-span-2 space-y-2">
                 <label className="text-xs font-black text-slate-600 dark:text-[#9db9a6] uppercase tracking-widest">UF</label>
-                <input 
+                <input
                   value={formData.uf}
                   onChange={(e) => setFormData(prev => ({ ...prev, uf: e.target.value }))}
-                  className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold text-center" 
-                  placeholder="SP" 
-                  maxLength={2} 
+                  className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold text-center"
+                  placeholder="SP"
+                  maxLength={2}
                 />
               </div>
             </div>

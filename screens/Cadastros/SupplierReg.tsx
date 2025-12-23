@@ -65,33 +65,33 @@ const SupplierReg: React.FC<{ user: User }> = ({ user }) => {
               <div className="space-y-2">
                 <label className="text-xs font-black text-slate-600 dark:text-[#9db9a6] uppercase tracking-widest">CNPJ / CPF</label>
                 <div className="relative">
-                  <input 
+                  <input
                     value={formData.doc}
                     onChange={handleDocChange}
-                    className={`h-12 w-full bg-slate-50 dark:bg-[#111813] border ${error ? 'border-danger' : 'border-slate-200 dark:border-surface-highlight'} rounded-xl px-4 text-slate-900 dark:text-white font-bold focus:ring-2 focus:ring-primary`} 
-                    placeholder="00.000.000/0001-00" 
+                    className={`h-12 w-full bg-slate-50 dark:bg-[#111813] border ${error ? 'border-danger' : 'border-slate-200 dark:border-surface-highlight'} rounded-xl px-4 text-slate-900 dark:text-white font-bold focus:ring-2 focus:ring-primary`}
+                    placeholder="00.000.000/0001-00"
                   />
                   {loading && <div className="absolute right-3 top-1/2 -translate-y-1/2 size-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>}
                 </div>
                 {error && <p className="text-[10px] text-danger font-black uppercase tracking-wider">{error}</p>}
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-black text-slate-600 dark:text-[#9db9a6] uppercase tracking-widest">Razão Social / Nome</label>
-                <input 
+                <label className="text-xs font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">Razão Social / Nome</label>
+                <input
                   value={formData.name}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  className="h-12 w-full bg-slate-50 dark:bg-[#111813] border border-slate-200 dark:border-surface-highlight rounded-xl px-4 text-slate-900 dark:text-white font-bold focus:ring-1 focus:ring-primary" 
-                  placeholder="Fornecedor Ltda" 
+                  className="h-12 w-full bg-slate-50 dark:bg-surface-darker border border-slate-200 dark:border-surface-highlight rounded-xl px-4 text-slate-900 dark:text-white font-bold focus:ring-1 focus:ring-primary"
+                  placeholder="Fornecedor Ltda"
                 />
               </div>
               <div className="md:col-span-2 space-y-2">
-                <label className="text-xs font-black text-slate-600 dark:text-[#9db9a6] uppercase tracking-widest">Email de Contato</label>
-                <input 
+                <label className="text-xs font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">Email de Contato</label>
+                <input
                   value={formData.email}
                   onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  className="h-12 w-full bg-slate-50 dark:bg-[#111813] border border-slate-200 dark:border-surface-highlight rounded-xl px-4 text-slate-900 dark:text-white font-bold focus:ring-1 focus:ring-primary" 
-                  type="email" 
-                  placeholder="comercial@fornecedor.com" 
+                  className="h-12 w-full bg-slate-50 dark:bg-[#111813] border border-slate-200 dark:border-surface-highlight rounded-xl px-4 text-slate-900 dark:text-white font-bold focus:ring-1 focus:ring-primary"
+                  type="email"
+                  placeholder="comercial@fornecedor.com"
                 />
               </div>
             </div>

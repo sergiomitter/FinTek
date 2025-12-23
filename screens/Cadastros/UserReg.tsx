@@ -29,7 +29,7 @@ const UserReg: React.FC = () => {
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (editingUserId) {
       // Update existing
       const updated = users.map(u => {
@@ -57,7 +57,7 @@ const UserReg: React.FC = () => {
       saveToStorage([...users, newUser]);
       alert(`Usuário cadastrado!\n\nE-mail enviado por ${SENDER_EMAIL} para ${newUser.email}!\n\nSenha Provisória: ${tempPass}`);
     }
-    
+
     closeForm();
   };
 
@@ -139,7 +139,7 @@ const UserReg: React.FC = () => {
           <p className="text-slate-600 dark:text-text-secondary text-base font-medium">Controle total de acessos e credenciais.</p>
         </div>
         {!showForm && (
-          <button 
+          <button
             onClick={() => setShowForm(true)}
             className="px-8 h-12 rounded-xl bg-primary text-background-dark font-black shadow-lg shadow-primary/20 flex items-center gap-2 hover:scale-[1.02] transition-all"
           >
@@ -161,54 +161,55 @@ const UserReg: React.FC = () => {
 
           <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">Nome Completo</label>
-              <input 
+              <label className="text-xs font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">Nome Completo</label>
+              <input
                 required
-                className="w-full h-12 bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-surface-highlight rounded-xl px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold"
                 value={formData.nome}
-                onChange={e => setFormData({...formData, nome: e.target.value})}
+                onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
+                className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold"
+                placeholder="Ex: João Silva"
               />
             </div>
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">E-mail (Login)</label>
-              <input 
+              <input
                 type="email"
                 required
                 className="w-full h-12 bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-surface-highlight rounded-xl px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold"
                 value={formData.email}
-                onChange={e => setFormData({...formData, email: e.target.value})}
+                onChange={e => setFormData({ ...formData, email: e.target.value })}
               />
             </div>
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">Celular</label>
-              <input 
+              <input
                 className="w-full h-12 bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-surface-highlight rounded-xl px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold"
                 value={formData.celular}
-                onChange={e => setFormData({...formData, celular: formatPhone(e.target.value)})}
+                onChange={e => setFormData({ ...formData, celular: formatPhone(e.target.value) })}
                 placeholder="(00) 00000-0000"
               />
             </div>
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">Função / Cargo</label>
-              <input 
+              <input
                 className="w-full h-12 bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-surface-highlight rounded-xl px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold"
                 value={formData.funcao}
-                onChange={e => setFormData({...formData, funcao: e.target.value})}
+                onChange={e => setFormData({ ...formData, funcao: e.target.value })}
               />
             </div>
             <div className="space-y-2 md:col-span-2">
               <label className="text-[10px] font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">Perfil de Acesso</label>
               <div className="flex gap-4 mt-2">
-                <button 
+                <button
                   type="button"
-                  onClick={() => setFormData({...formData, role: 'ADMIN'})}
+                  onClick={() => setFormData({ ...formData, role: 'ADMIN' })}
                   className={`flex-1 h-14 rounded-xl border-2 font-black text-xs tracking-widest transition-all ${formData.role === 'ADMIN' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 dark:border-surface-highlight text-slate-400'}`}
                 >
                   ADMINISTRADOR (ACESSO GERAL)
                 </button>
-                <button 
+                <button
                   type="button"
-                  onClick={() => setFormData({...formData, role: 'USER'})}
+                  onClick={() => setFormData({ ...formData, role: 'USER' })}
                   className={`flex-1 h-14 rounded-xl border-2 font-black text-xs tracking-widest transition-all ${formData.role === 'USER' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 dark:border-surface-highlight text-slate-400'}`}
                 >
                   USUÁRIO (SOMENTE CONSULTA)
@@ -216,7 +217,7 @@ const UserReg: React.FC = () => {
               </div>
             </div>
             <div className="md:col-span-2 flex justify-end gap-4 pt-4">
-               <button 
+              <button
                 type="button"
                 onClick={closeForm}
                 className="px-8 h-14 border border-slate-200 dark:border-surface-highlight text-slate-600 dark:text-text-secondary font-black rounded-2xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all"
@@ -269,21 +270,21 @@ const UserReg: React.FC = () => {
                   </td>
                   <td className="px-8 py-5 text-center">
                     <div className="flex justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button 
+                      <button
                         onClick={() => handleEdit(u)}
                         className="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-500/10 rounded-xl transition-all"
                         title="Editar Dados"
                       >
                         <span className="material-symbols-outlined text-lg">edit</span>
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleManualPassword(u.id)}
                         className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-all"
                         title="Alterar Senha Manualmente"
                       >
                         <span className="material-symbols-outlined text-lg">key</span>
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleResetPassword(u.id)}
                         className="p-2 text-slate-400 hover:text-yellow-500 hover:bg-yellow-500/10 rounded-xl transition-all"
                         title="Resetar Senha (E-mail)"
@@ -291,7 +292,7 @@ const UserReg: React.FC = () => {
                         <span className="material-symbols-outlined text-lg">lock_reset</span>
                       </button>
                       {u.email !== 'sergio@sintektecnologia.com.br' && (
-                        <button 
+                        <button
                           onClick={() => handleDelete(u.id)}
                           className="p-2 text-slate-400 hover:text-danger hover:bg-danger/10 rounded-xl transition-all"
                           title="Excluir Usuário"

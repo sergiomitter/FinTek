@@ -38,16 +38,20 @@ const PeopleReg: React.FC<{ user: User }> = ({ user }) => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
               <div className="md:col-span-8 space-y-2">
-                <label className="text-xs font-black text-slate-600 dark:text-[#9db9a6] uppercase tracking-widest">Nome Completo</label>
-                <input className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold" placeholder="Ex: João da Silva" />
+                <label className="text-xs font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">Nome Completo</label>
+                <input
+                  required
+                  className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold"
+                  placeholder="Ex: João da Silva"
+                />
               </div>
               <div className="md:col-span-4 space-y-2">
                 <label className="text-xs font-black text-slate-600 dark:text-[#9db9a6] uppercase tracking-widest">CPF</label>
-                <input 
+                <input
                   value={cpf}
                   onChange={handleCPFChange}
-                  className={`h-12 w-full rounded-xl border ${error ? 'border-danger' : 'border-slate-200 dark:border-surface-highlight'} bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold`} 
-                  placeholder="000.000.000-00" 
+                  className={`h-12 w-full rounded-xl border ${error ? 'border-danger' : 'border-slate-200 dark:border-surface-highlight'} bg-slate-50 dark:bg-[#111813] px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold`}
+                  placeholder="000.000.000-00"
                 />
                 {error && <p className="text-[10px] text-danger font-black uppercase tracking-wider">{error}</p>}
               </div>

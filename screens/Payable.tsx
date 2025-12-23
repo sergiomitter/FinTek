@@ -169,7 +169,7 @@ const Payable: React.FC<{ user: User }> = ({ user }) => {
             <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Descrição</label>
             <input
               required
-              className="w-full bg-slate-50 dark:bg-[#111813] border border-slate-200 dark:border-surface-highlight rounded-xl h-12 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold placeholder-slate-400"
+              className="w-full bg-slate-50 dark:bg-surface-darker border border-slate-200 dark:border-surface-highlight rounded-xl h-12 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold placeholder-slate-400"
               placeholder="Ex: Aluguel do escritório central"
               value={description}
               onChange={e => setDescription(e.target.value)}
@@ -245,7 +245,7 @@ const Payable: React.FC<{ user: User }> = ({ user }) => {
       </div>
 
       <div className="bg-white dark:bg-surface-dark border border-slate-200 dark:border-surface-highlight rounded-2xl overflow-hidden shadow-sm">
-        <div className="p-6 border-b border-slate-200 dark:border-surface-highlight flex flex-wrap justify-between items-center gap-6 bg-slate-50 dark:bg-[#152019]">
+        <div className="p-6 border-b border-slate-200 dark:border-surface-highlight flex flex-wrap justify-between items-center gap-6 bg-slate-50 dark:bg-surface-darker">
           <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">Contas Cadastradas</h3>
           <div className="flex gap-4">
             <span className="bg-slate-200 dark:bg-surface-highlight px-4 py-1.5 rounded-xl text-xs font-black text-slate-800 dark:text-text-secondary border border-black/5 dark:border-white/5 uppercase">
@@ -281,7 +281,7 @@ const Payable: React.FC<{ user: User }> = ({ user }) => {
                   <tr key={row.id} className="hover:bg-slate-50 dark:hover:bg-surface-highlight/20 transition-all group">
                     <td className="px-8 py-4">
                       <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase border ${row.status === 'PENDING' ? 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-500 border-yellow-500/20' :
-                          row.status === 'PAID' ? 'bg-primary/10 text-primary border-primary/20' : 'bg-danger/10 text-danger border-danger/20'
+                        row.status === 'PAID' ? 'bg-primary/10 text-primary border-primary/20' : 'bg-danger/10 text-danger border-danger/20'
                         }`}>
                         {row.status}
                       </span>

@@ -14,15 +14,14 @@ interface SidebarItemProps {
 
 const SidebarItem: React.FC<SidebarItemProps> = ({ to, icon, label, isActive, isAdminOnly, userRole }) => {
   if (isAdminOnly && userRole !== 'ADMIN') return null;
-  
+
   return (
     <Link
       to={to}
-      className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-        isActive
+      className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive
           ? 'bg-primary/10 border border-primary/20 text-slate-900 dark:text-white shadow-lg'
           : 'text-slate-600 dark:text-text-secondary hover:bg-slate-100 dark:hover:bg-surface-highlight hover:text-slate-900 dark:hover:text-white'
-      }`}
+        }`}
     >
       <span className={`material-symbols-outlined ${isActive ? 'text-primary' : 'text-slate-400 dark:text-text-secondary'}`}>
         {icon}
@@ -61,7 +60,7 @@ const Layout: React.FC<{ children: React.ReactNode, user: User, onLogout: () => 
       <aside className="hidden lg:flex flex-col w-72 h-full bg-white dark:bg-background-dark border-r border-slate-200 dark:border-surface-highlight shrink-0">
         <div className="flex flex-col h-full p-4">
           <div className="flex gap-3 items-center px-2 py-4 mb-6">
-            <div className="size-10 rounded-full bg-primary flex items-center justify-center shadow-[0_0_15px_rgba(19,236,91,0.3)]">
+            <div className="size-10 rounded-full bg-primary flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.3)]">
               <span className="material-symbols-outlined text-background-dark">account_balance_wallet</span>
             </div>
             <div className="flex flex-col">
@@ -73,7 +72,7 @@ const Layout: React.FC<{ children: React.ReactNode, user: User, onLogout: () => 
           <div className="flex flex-col gap-1 flex-1 overflow-y-auto pr-2 scrollbar-hide">
             <SidebarItem to="/" icon="dashboard" label="Visão Geral" isActive={isActive('/')} />
             <SidebarItem to="/agendamentos" icon="event_note" label="Agendamentos" isActive={isActive('/agendamentos')} />
-            
+
             <div className="px-4 py-3 mt-4">
               <p className="text-[10px] font-black text-slate-400 dark:text-text-secondary uppercase tracking-[0.2em]">Operacional</p>
             </div>
@@ -89,14 +88,14 @@ const Layout: React.FC<{ children: React.ReactNode, user: User, onLogout: () => 
             <SidebarItem to="/cadastros/pessoa" icon="person" label="Pessoas" isActive={isActive('/cadastros/pessoa')} />
             <SidebarItem to="/cadastros/banco" icon="account_balance" label="Bancos" isActive={isActive('/cadastros/banco')} />
             <SidebarItem to="/cadastros/fornecedor" icon="local_shipping" label="Fornecedores" isActive={isActive('/cadastros/fornecedor')} />
-            
+
             {user.role === 'ADMIN' && (
-              <SidebarItem 
-                to="/cadastros/usuarios" 
-                icon="admin_panel_settings" 
-                label="Usuários" 
+              <SidebarItem
+                to="/cadastros/usuarios"
+                icon="admin_panel_settings"
+                label="Usuários"
                 isActive={isActive('/cadastros/usuarios')}
-                isAdminOnly 
+                isAdminOnly
                 userRole={user.role}
               />
             )}
@@ -106,7 +105,7 @@ const Layout: React.FC<{ children: React.ReactNode, user: User, onLogout: () => 
             <div className="flex items-center justify-between px-2">
               <div className="flex items-center gap-3">
                 <img
-                  src={`https://ui-avatars.com/api/?name=${user.nome}&background=13ec5b&color=102216&bold=true`}
+                  src={`https://ui-avatars.com/api/?name=${user.nome}&background=3b82f6&color=0f172a&bold=true`}
                   alt="Profile"
                   className="size-10 rounded-full border border-slate-200 dark:border-surface-highlight"
                 />
@@ -115,7 +114,7 @@ const Layout: React.FC<{ children: React.ReactNode, user: User, onLogout: () => 
                   <p className="text-slate-500 dark:text-text-secondary text-[10px] font-bold uppercase truncate">{user.role}</p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={onLogout}
                 className="p-2 text-slate-400 hover:text-danger transition-colors"
                 title="Sair do sistema"
@@ -151,7 +150,7 @@ const Layout: React.FC<{ children: React.ReactNode, user: User, onLogout: () => 
             </div>
 
             <div className="relative">
-              <button 
+              <button
                 onClick={() => setShowNotifications(!showNotifications)}
                 className="relative p-2 text-slate-500 dark:text-text-secondary hover:text-slate-900 dark:hover:text-white transition-colors"
               >
@@ -182,8 +181,8 @@ const Layout: React.FC<{ children: React.ReactNode, user: User, onLogout: () => 
                       ))}
                     </div>
                     <div className="p-3 text-center border-t border-slate-100 dark:border-surface-highlight">
-                      <Link 
-                        to="/agendamentos" 
+                      <Link
+                        to="/agendamentos"
                         onClick={() => setShowNotifications(false)}
                         className="text-xs font-black text-primary hover:text-primary-hover uppercase tracking-wider"
                       >
@@ -195,7 +194,7 @@ const Layout: React.FC<{ children: React.ReactNode, user: User, onLogout: () => 
               )}
             </div>
 
-            <button 
+            <button
               onClick={() => setIsDarkMode(!isDarkMode)}
               className="p-2 text-slate-500 dark:text-text-secondary hover:text-slate-900 dark:hover:text-white transition-colors"
             >

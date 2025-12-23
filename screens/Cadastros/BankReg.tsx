@@ -31,7 +31,7 @@ const BankReg: React.FC<{ user: User }> = ({ user }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-2">
               <label className="text-xs font-bold text-[#9db9a6] uppercase tracking-widest">Banco / Instituição</label>
-              <select 
+              <select
                 value={selectedBank}
                 onChange={(e) => setSelectedBank(e.target.value)}
                 className="h-12 w-full rounded-xl border border-surface-highlight bg-[#111813] px-4 text-white focus:ring-1 focus:ring-primary appearance-none"
@@ -41,7 +41,7 @@ const BankReg: React.FC<{ user: User }> = ({ user }) => {
                 ))}
               </select>
             </div>
-            
+
             <div className="space-y-2">
               <label className="text-xs font-bold text-[#9db9a6] uppercase tracking-widest">Agência</label>
               <input className="h-12 w-full rounded-xl border border-surface-highlight bg-[#111813] px-4 text-white" placeholder="0001-X" />
@@ -50,11 +50,11 @@ const BankReg: React.FC<{ user: User }> = ({ user }) => {
             {selectedBank === 'OTHER' && (
               <div className="lg:col-span-3 space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
                 <label className="text-xs font-bold text-primary uppercase tracking-widest">Nome do Novo Banco</label>
-                <input 
+                <input
                   value={customBankName}
                   onChange={(e) => setCustomBankName(e.target.value)}
-                  className="h-12 w-full rounded-xl border border-primary/50 bg-[#111813] px-4 text-white focus:ring-1 focus:ring-primary" 
-                  placeholder="Digite o nome da instituição financeira" 
+                  className="h-12 w-full rounded-xl border border-primary/50 bg-[#111813] px-4 text-white focus:ring-1 focus:ring-primary"
+                  placeholder="Digite o nome da instituição financeira"
                 />
               </div>
             )}
@@ -64,8 +64,12 @@ const BankReg: React.FC<{ user: User }> = ({ user }) => {
               <input className="h-12 w-full rounded-xl border border-surface-highlight bg-[#111813] px-4 text-white" placeholder="00000000-0" />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-bold text-[#9db9a6] uppercase tracking-widest">Saldo Inicial</label>
-              <input className="h-12 w-full rounded-xl border border-surface-highlight bg-[#111813] px-4 text-white text-right font-black" placeholder="R$ 0,00" />
+              <label className="text-xs font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">Nome do Banco</label>
+              <input
+                required
+                className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold"
+                placeholder="Ex: Nubank"
+              />
             </div>
           </div>
         </div>

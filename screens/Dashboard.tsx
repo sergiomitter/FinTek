@@ -35,13 +35,13 @@ const DashboardCard: React.FC<{
       <span className={`material-symbols-outlined text-6xl text-${color}`}>{icon}</span>
     </div>
     <div className="flex flex-col gap-3 relative z-10">
-      <div className="flex items-center gap-2 text-slate-500 dark:text-[#9db9a6]">
+      <div className="flex items-center gap-2 text-slate-500 dark:text-text-secondary">
         <span className="text-xs font-black uppercase tracking-wider">{title}</span>
       </div>
       <div>
         <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">{amount}</h3>
         {trend && (
-          <p className={`text-sm mt-1 flex items-center gap-1 font-bold ${trendType === 'positive' ? 'text-primary' : trendType === 'negative' ? 'text-danger' : 'text-slate-500 dark:text-[#9db9a6]'
+          <p className={`text-sm mt-1 flex items-center gap-1 font-bold ${trendType === 'positive' ? 'text-primary' : trendType === 'negative' ? 'text-danger' : 'text-slate-500 dark:text-text-secondary'
             }`}>
             <span className="material-symbols-outlined text-sm">
               {trendType === 'positive' ? 'trending_up' : trendType === 'negative' ? 'trending_down' : 'info'}
@@ -230,7 +230,7 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
     <div className="p-6 lg:p-10 space-y-10 max-w-[1600px] mx-auto">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <p className="text-slate-500 dark:text-[#9db9a6] text-sm font-bold uppercase tracking-wide mb-1">Olá, {user.nome.split(' ')[0]}!</p>
+          <p className="text-slate-500 dark:text-text-secondary text-sm font-bold uppercase tracking-wide mb-1">Olá, {user.nome.split(' ')[0]}!</p>
           <h1 className="text-slate-900 dark:text-white text-4xl font-black tracking-tight">Hoje, 24 de Outubro</h1>
         </div>
         <div className="flex gap-3">
@@ -286,7 +286,7 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
               <div>
                 <h3 className="text-slate-900 dark:text-white text-xl font-black">Fluxo Mensal</h3>
-                <p className="text-slate-500 dark:text-[#9db9a6] text-sm font-medium">Comparativo de Entradas e Saídas</p>
+                <p className="text-slate-500 dark:text-text-secondary text-sm font-medium">Comparativo de Entradas e Saídas</p>
               </div>
               <div className="bg-slate-50 dark:bg-surface-highlight/50 border border-slate-200 dark:border-surface-highlight rounded-2xl p-4 flex items-center gap-6 shadow-inner">
                 <div>
@@ -327,7 +327,7 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
 
         <div className="xl:col-span-4 space-y-8">
           <div className="bg-white dark:bg-surface-dark rounded-2xl border border-slate-200 dark:border-surface-highlight overflow-hidden shadow-sm">
-            <div className="p-4 border-b border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-[#152019] flex justify-between items-center">
+            <div className="p-4 border-b border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-surface-darker flex justify-between items-center">
               <h3 className="text-slate-900 dark:text-white font-black flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary">account_balance</span> Saldos Bancários
               </h3>
@@ -347,7 +347,7 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
                     </div>
                     <div>
                       <p className="text-slate-900 dark:text-white text-sm font-black">{bank.name}</p>
-                      <p className="text-slate-400 dark:text-[#9db9a6] text-[10px] font-black uppercase tracking-wider">{bank.type}</p>
+                      <p className="text-slate-400 dark:text-text-secondary text-[10px] font-black uppercase tracking-wider">{bank.type}</p>
                     </div>
                   </div>
                   <p className="text-slate-900 dark:text-white font-black text-sm">{bank.balance}</p>
