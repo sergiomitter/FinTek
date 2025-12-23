@@ -27,7 +27,7 @@ const DashboardCard: React.FC<{
   color?: string;
   onClick?: () => void;
 }> = ({ title, amount, icon, trend, trendType, color = 'primary', onClick }) => (
-  <div 
+  <div
     onClick={onClick}
     className={`bg-white dark:bg-surface-dark rounded-2xl p-6 border border-slate-200 dark:border-surface-highlight hover:border-primary/50 transition-all duration-300 relative group overflow-hidden shadow-sm hover:shadow-xl ${onClick ? 'cursor-pointer' : ''}`}
   >
@@ -41,9 +41,8 @@ const DashboardCard: React.FC<{
       <div>
         <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">{amount}</h3>
         {trend && (
-          <p className={`text-sm mt-1 flex items-center gap-1 font-bold ${
-            trendType === 'positive' ? 'text-primary' : trendType === 'negative' ? 'text-danger' : 'text-slate-500 dark:text-[#9db9a6]'
-          }`}>
+          <p className={`text-sm mt-1 flex items-center gap-1 font-bold ${trendType === 'positive' ? 'text-primary' : trendType === 'negative' ? 'text-danger' : 'text-slate-500 dark:text-[#9db9a6]'
+            }`}>
             <span className="material-symbols-outlined text-sm">
               {trendType === 'positive' ? 'trending_up' : trendType === 'negative' ? 'trending_down' : 'info'}
             </span>
@@ -94,12 +93,12 @@ const KPIModal: React.FC<{
 
   return (
     <>
-      <div 
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 animate-in fade-in duration-200" 
+      <div
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 animate-in fade-in duration-200"
         onClick={onClose}
       />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-        <div 
+        <div
           className="bg-white dark:bg-surface-dark border border-slate-200 dark:border-surface-highlight rounded-2xl shadow-2xl w-full max-w-3xl max-h-[80vh] overflow-hidden pointer-events-auto animate-in zoom-in-95 fade-in duration-200"
           onClick={(e) => e.stopPropagation()}
         >
@@ -114,7 +113,7 @@ const KPIModal: React.FC<{
                   <p className="text-sm text-slate-500 dark:text-text-secondary font-medium">{data.records.length} registro(s) encontrado(s)</p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={onClose}
                 className="p-2 hover:bg-slate-200 dark:hover:bg-surface-highlight rounded-xl transition-colors"
               >
@@ -122,7 +121,7 @@ const KPIModal: React.FC<{
               </button>
             </div>
           </div>
-          
+
           <div className="overflow-x-auto max-h-[60vh] overflow-y-auto">
             <table className="w-full text-left">
               <thead className="bg-slate-50 dark:bg-surface-highlight/30 sticky top-0">
@@ -151,9 +150,9 @@ const KPIModal: React.FC<{
               </tbody>
             </table>
           </div>
-          
+
           <div className="p-4 border-t border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-surface-highlight/20 flex justify-end">
-            <button 
+            <button
               onClick={onClose}
               className="px-6 py-2.5 bg-primary text-background-dark font-black rounded-xl text-sm hover:bg-primary-hover transition-all shadow-lg shadow-primary/20"
             >
@@ -247,36 +246,36 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <DashboardCard 
-          title="A Pagar Hoje" 
-          amount="R$ 12.450,00" 
-          icon="payments" 
-          trend="3 títulos vencendo" 
-          trendType="negative" 
-          color="danger" 
+        <DashboardCard
+          title="A Pagar Hoje"
+          amount="R$ 12.450,00"
+          icon="payments"
+          trend="3 títulos vencendo"
+          trendType="negative"
+          color="danger"
           onClick={() => handleKPIClick('aPagarHoje')}
         />
-        <DashboardCard 
-          title="Pago no Mês" 
-          amount="R$ 145.200,00" 
-          icon="check_circle" 
-          trend="42 contas pagas" 
-          trendType="positive" 
+        <DashboardCard
+          title="Pago no Mês"
+          amount="R$ 145.200,00"
+          icon="check_circle"
+          trend="42 contas pagas"
+          trendType="positive"
           onClick={() => handleKPIClick('pagoNoMes')}
         />
-        <DashboardCard 
-          title="Investido Hoje" 
-          amount="R$ 5.000,00" 
-          icon="savings" 
-          trend="Aporte programado" 
+        <DashboardCard
+          title="Investido Hoje"
+          amount="R$ 5.000,00"
+          icon="savings"
+          trend="Aporte programado"
           onClick={() => handleKPIClick('investidoHoje')}
         />
-        <DashboardCard 
-          title="Recebido Mês" 
-          amount="R$ 180.000,00" 
-          icon="account_balance" 
-          trend="+8% vs mês anterior" 
-          trendType="positive" 
+        <DashboardCard
+          title="Recebido Mês"
+          amount="R$ 180.000,00"
+          icon="account_balance"
+          trend="+8% vs mês anterior"
+          trendType="positive"
           onClick={() => handleKPIClick('recebidoMes')}
         />
       </div>
@@ -299,7 +298,7 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
                 </div>
               </div>
             </div>
-            
+
             <div className="space-y-6">
               <div className="flex items-center gap-6">
                 <span className="w-20 text-right text-xs font-black text-slate-400 dark:text-[#9db9a6] uppercase tracking-wider">Receitas</span>
@@ -327,7 +326,7 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
         </div>
 
         <div className="xl:col-span-4 space-y-8">
-           <div className="bg-white dark:bg-surface-dark rounded-2xl border border-slate-200 dark:border-surface-highlight overflow-hidden shadow-sm">
+          <div className="bg-white dark:bg-surface-dark rounded-2xl border border-slate-200 dark:border-surface-highlight overflow-hidden shadow-sm">
             <div className="p-4 border-b border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-[#152019] flex justify-between items-center">
               <h3 className="text-slate-900 dark:text-white font-black flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary">account_balance</span> Saldos Bancários
@@ -359,10 +358,10 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
         </div>
       </div>
 
-      <KPIModal 
-        isOpen={modalOpen} 
-        onClose={closeModal} 
-        data={selectedKPI} 
+      <KPIModal
+        isOpen={modalOpen}
+        onClose={closeModal}
+        data={selectedKPI}
       />
     </div>
   );
