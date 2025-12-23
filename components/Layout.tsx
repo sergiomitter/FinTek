@@ -99,7 +99,16 @@ const Layout: React.FC<{ children: React.ReactNode, user: User, onLogout: () => 
                 icon="admin_panel_settings"
                 label="Usuários"
                 isActive={isActive('/cadastros/usuarios')}
-                isAdminOnly={user.role !== 'MASTER_ADMIN'} // only MASTER can edit user, but maybe both see? User said: "5) criar o perfil de Administrador Master com acesso Geral do sistema, este usuário deve ter visão de todos os menus e direito de alteração;"
+                userRole={user.role}
+              />
+            )}
+
+            {user.role === 'MASTER_ADMIN' && (
+              <SidebarItem
+                to="/cadastros/audit"
+                icon="history"
+                label="Logs do Sistema"
+                isActive={isActive('/cadastros/audit')}
                 userRole={user.role}
               />
             )}

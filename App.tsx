@@ -14,6 +14,7 @@ import BankReg from './screens/Cadastros/BankReg';
 import SupplierReg from './screens/Cadastros/SupplierReg';
 import CustomerReg from './screens/Cadastros/CustomerReg';
 import UserReg from './screens/Cadastros/UserReg';
+import AuditLog from './screens/Cadastros/AuditLog';
 import { User, UserRole } from './types';
 import { supabase } from './lib/supabase';
 
@@ -98,6 +99,9 @@ const App: React.FC = () => {
 
           {(currentUser.role === 'MASTER_ADMIN' || currentUser.role === 'ADMIN') && (
             <Route path="/cadastros/usuarios" element={<UserReg user={currentUser} />} />
+          )}
+          {currentUser.role === 'MASTER_ADMIN' && (
+            <Route path="/cadastros/audit" element={<AuditLog user={currentUser} />} />
           )}
 
           <Route path="*" element={<Navigate to="/" replace />} />
