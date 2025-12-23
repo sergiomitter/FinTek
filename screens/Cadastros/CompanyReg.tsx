@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { validateCNPJ, formatCNPJ } from '../../utils/helpers';
+import { validateCNPJ, formatDocument, validateCPF } from '../../utils/helpers';
 import { User, Company } from '../../types';
 import { supabase } from '../../lib/supabase';
 import { Edit3, Trash2, PlusCircle, Building2, Search, X, Users, UserPlus, Trash } from 'lucide-react';
@@ -25,6 +25,7 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
 
   const [partners, setPartners] = useState<{ name: string; cpf: string; participation: string }[]>([]);
   const [newPartner, setNewPartner] = useState({ name: '', cpf: '', participation: '' });
+  const [editingPartnerIdx, setEditingPartnerIdx] = useState<number | null>(null);
 
   useEffect(() => {
     fetchCompanies();
@@ -46,11 +47,13 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
   };
 
   const handleCNPJChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = formatCNPJ(e.target.value);
+    const value = formatDocument(e.target.value);
     setFormData(prev => ({ ...prev, cnpj: value }));
     setError('');
 
     const cleanValue = value.replace(/\D/g, '');
+
+    // CNPJ logic
     if (cleanValue.length === 14) {
       if (!validateCNPJ(cleanValue)) {
         setError('CNPJ Inválido');
@@ -72,6 +75,12 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
         setError('Não foi possível buscar os dados do CNPJ');
       } finally {
         setLoading(false);
+      }
+    }
+    // CPF logic - just validation
+    else if (cleanValue.length === 11) {
+      if (!validateCPF(cleanValue)) {
+        setError('CPF Inválido');
       }
     }
   };
@@ -145,17 +154,43 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
     setSaving(false);
   };
 
-  const addPartner = () => {
+  const savePartner = () => {
     if (!newPartner.name || !newPartner.cpf || !newPartner.participation) {
       alert('Preencha os dados do sócio');
       return;
     }
-    setPartners([...partners, { ...newPartner }]);
+
+    if (editingPartnerIdx !== null) {
+      const updatedPartners = [...partners];
+      updatedPartners[editingPartnerIdx] = { ...newPartner };
+      setPartners(updatedPartners);
+      setEditingPartnerIdx(null);
+    } else {
+      setPartners([...partners, { ...newPartner }]);
+    }
+
     setNewPartner({ name: '', cpf: '', participation: '' });
   };
 
   const removePartner = (index: number) => {
-    setPartners(partners.filter((_, i) => i !== index));
+    if (confirm('Deseja excluir este sócio?')) {
+      setPartners(partners.filter((_, i) => i !== index));
+      if (editingPartnerIdx === index) {
+        setEditingPartnerIdx(null);
+        setNewPartner({ name: '', cpf: '', participation: '' });
+      }
+    }
+  };
+
+  const editPartner = (index: number) => {
+    const partner = partners[index];
+    setNewPartner({ ...partner });
+    setEditingPartnerIdx(index);
+    // Scroll to partner form
+    const partnerForm = document.getElementById('partner-form');
+    if (partnerForm) {
+      partnerForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   };
 
   const handleEdit = async (company: Company) => {
@@ -207,6 +242,7 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
     setPartners([]);
     setNewPartner({ name: '', cpf: '', participation: '' });
     setEditingId(null);
+    setEditingPartnerIdx(null);
     setShowForm(false);
     setError('');
   };
@@ -270,14 +306,14 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
           <form onSubmit={handleSave} className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
               <div className="md:col-span-4 space-y-2 relative">
-                <label className="text-xs font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">CNPJ</label>
+                <label className="text-xs font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">CPF / CNPJ</label>
                 <div className="relative">
                   <input
                     required
                     value={formData.cnpj}
                     onChange={handleCNPJChange}
                     className={`h-12 w-full rounded-xl border ${error ? 'border-danger' : 'border-slate-200 dark:border-surface-highlight'} bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold`}
-                    placeholder="00.000.000/0000-00"
+                    placeholder="000.000.000-00 ou 00.000.000/0000-00"
                   />
                   {loading && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -326,7 +362,7 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
                   <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">Sócios</h4>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end bg-slate-50 dark:bg-surface-darker/50 p-6 rounded-2xl border border-slate-100 dark:border-surface-highlight/30">
+                <div id="partner-form" className={`grid grid-cols-1 md:grid-cols-12 gap-4 items-end p-6 rounded-2xl border transition-all duration-300 ${editingPartnerIdx !== null ? 'bg-primary/5 border-primary/30 ring-1 ring-primary/20' : 'bg-slate-50 dark:bg-surface-darker/50 border-slate-100 dark:border-surface-highlight/30'}`}>
                   <div className="md:col-span-4 space-y-2">
                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Nome do Sócio</label>
                     <input
@@ -337,10 +373,10 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
                     />
                   </div>
                   <div className="md:col-span-3 space-y-2">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">CPF</label>
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">CPF / CNPJ</label>
                     <input
                       value={newPartner.cpf}
-                      onChange={e => setNewPartner({ ...newPartner, cpf: e.target.value })}
+                      onChange={e => setNewPartner({ ...newPartner, cpf: formatDocument(e.target.value) })}
                       className="h-10 w-full rounded-lg border border-slate-200 dark:border-surface-highlight bg-white dark:bg-surface-dark px-3 text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold"
                       placeholder="000.000.000-00"
                     />
@@ -356,13 +392,27 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <button
-                      type="button"
-                      onClick={addPartner}
-                      className="w-full h-10 rounded-lg bg-surface-highlight text-white flex items-center justify-center gap-2 text-xs font-black hover:bg-slate-600 transition-all uppercase tracking-widest"
-                    >
-                      <UserPlus className="w-4 h-4" /> Add
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={savePartner}
+                        className={`flex-1 h-10 rounded-lg flex items-center justify-center gap-2 text-xs font-black transition-all uppercase tracking-widest ${editingPartnerIdx !== null ? 'bg-primary text-background-dark shadow-lg shadow-primary/20 hover:bg-primary-hover' : 'bg-surface-highlight text-white hover:bg-slate-600'}`}
+                      >
+                        {editingPartnerIdx !== null ? <><Edit3 className="w-4 h-4" /> Salvar</> : <><UserPlus className="w-4 h-4" /> Add</>}
+                      </button>
+                      {editingPartnerIdx !== null && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingPartnerIdx(null);
+                            setNewPartner({ name: '', cpf: '', participation: '' });
+                          }}
+                          className="px-3 h-10 rounded-lg bg-slate-200 dark:bg-surface-highlight text-slate-600 dark:text-white font-black hover:bg-slate-300 dark:hover:bg-slate-600 transition-all"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -384,13 +434,24 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
                             <td className="px-5 py-3 font-medium text-slate-600 dark:text-text-secondary">{p.cpf}</td>
                             <td className="px-5 py-3 font-black text-slate-900 dark:text-white text-right">{p.participation}%</td>
                             <td className="px-5 py-3 text-center">
-                              <button
-                                type="button"
-                                onClick={() => removePartner(idx)}
-                                className="p-2 text-slate-400 hover:text-danger hover:bg-danger/10 rounded-lg transition-all"
-                              >
-                                <Trash className="w-4 h-4" />
-                              </button>
+                              <div className="flex items-center justify-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => editPartner(idx)}
+                                  className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
+                                  title="Editar Sócio"
+                                >
+                                  <Edit3 className="w-4 h-4" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => removePartner(idx)}
+                                  className="p-2 text-slate-400 hover:text-danger hover:bg-danger/10 rounded-lg transition-all"
+                                  title="Excluir Sócio"
+                                >
+                                  <Trash className="w-4 h-4" />
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))}
