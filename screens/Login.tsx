@@ -25,12 +25,58 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
+      // 1. Check if user is blocked first
+      const { data: profile, error: profileErr } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('email', email)
+        .single();
+
+      if (profile && profile.is_blocked) {
+        throw new Error('Esta conta está bloqueada por excesso de tentativas ou por um administrador. Contate o suporte.');
+      }
+
+      // 2. Attempt login
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        // Increment failed attempts
+        if (profile) {
+          const newAttempts = (profile.failed_attempts || 0) + 1;
+          const isNowBlocked = newAttempts >= 3;
+
+          await supabase
+            .from('profiles')
+            .update({
+              failed_attempts: newAttempts,
+              is_blocked: isNowBlocked
+            })
+            .eq('id', profile.id);
+
+          if (isNowBlocked) {
+            // Log highly critical lockout
+            await supabase.from('audit_logs').insert({
+              user_email: email,
+              table_name: 'auth',
+              action: 'LOCKOUT',
+              new_data: { reason: '3 failed attempts', email: email }
+            });
+            throw new Error('Conta bloqueada após 3 tentativas inválidas.');
+          }
+        }
+        throw authError;
+      }
+
+      // 3. Reset attempts on success
+      if (profile) {
+        await supabase
+          .from('profiles')
+          .update({ failed_attempts: 0 })
+          .eq('id', profile.id);
+      }
 
       if (data.user) {
         const isFirstAccess = data.user.user_metadata?.isFirstAccess;
@@ -48,7 +94,6 @@ const Login: React.FC = () => {
           setTempUser(user);
           setView('FIRST_ACCESS');
         }
-        // App.tsx handles the actual state transition via onAuthStateChange
       }
     } catch (err: any) {
       setError(err.message || 'Erro ao realizar login.');

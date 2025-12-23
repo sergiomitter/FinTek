@@ -2,8 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { User, UserRole } from '../../types';
 import { generateTempPassword, formatPhone } from '../../utils/helpers';
+import { supabase } from '../../lib/supabase';
+import { UserPlus, Edit3, Trash2, ShieldCheck, Lock, Unlock, Mail, Loader2, X, Search } from 'lucide-react';
 
-const UserReg: React.FC = () => {
+const UserReg: React.FC<{ user: User }> = ({ user }) => {
+  const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
@@ -16,49 +21,89 @@ const UserReg: React.FC = () => {
   });
 
   const SENDER_EMAIL = 'suporte@sintektecnologia.com.br';
+  const SYSTEM_LINK = window.location.origin;
 
   useEffect(() => {
-    const saved = localStorage.getItem('fingestao_users');
-    if (saved) setUsers(JSON.parse(saved));
+    fetchUsers();
   }, []);
 
-  const saveToStorage = (updatedUsers: User[]) => {
-    setUsers(updatedUsers);
-    localStorage.setItem('fingestao_users', JSON.stringify(updatedUsers));
+  const fetchUsers = async () => {
+    setFetching(true);
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .order('nome');
+
+    if (error) {
+      console.error('Error fetching users:', error);
+    } else {
+      setUsers((data || []).map(p => ({
+        id: p.id,
+        nome: p.nome,
+        email: p.email,
+        celular: p.celular,
+        funcao: p.funcao,
+        role: p.role as UserRole,
+        isFirstAccess: false, // We'll assume if they are in profiles they are defined, but auth handles this
+        status: p.is_blocked ? 'BLOCKED' : 'ACTIVE'
+      })));
+    }
+    setFetching(false);
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaving(true);
 
-    if (editingUserId) {
-      // Update existing
-      const updated = users.map(u => {
-        if (u.id === editingUserId) {
-          return { ...u, ...formData } as User;
-        }
-        return u;
-      });
-      saveToStorage(updated);
-      alert('Dados do usuário atualizados com sucesso!');
-    } else {
-      // Create new
-      const tempPass = generateTempPassword();
-      const newUser: User = {
-        id: Math.random().toString(36).substr(2, 9),
-        nome: formData.nome!,
-        email: formData.email!,
-        celular: formData.celular!,
-        funcao: formData.funcao!,
-        role: formData.role!,
-        password: tempPass,
-        isFirstAccess: true
-      };
+    try {
+      if (editingUserId) {
+        // Update Profile
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({
+            nome: formData.nome,
+            celular: formData.celular,
+            funcao: formData.funcao,
+            role: formData.role
+          })
+          .eq('id', editingUserId);
 
-      saveToStorage([...users, newUser]);
-      alert(`Usuário cadastrado!\n\nE-mail enviado por ${SENDER_EMAIL} para ${newUser.email}!\n\nSenha Provisória: ${tempPass}`);
+        if (updateError) throw updateError;
+        alert('Dados do usuário atualizados com sucesso!');
+      } else {
+        // Create in Auth (requires a trick or a specialized edge function typically, 
+        // but for this MVP/Demo we'll use a simulated invite if we can't create directly)
+
+        // For Supabase, creating a user usually requires service_role key or an edge function.
+        // We will simulate the invitation logic as requested.
+        const tempPass = generateTempPassword();
+
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: formData.email!,
+          password: tempPass,
+          options: {
+            data: {
+              nome: formData.nome,
+              celular: formData.celular,
+              funcao: formData.funcao,
+              role: formData.role,
+              isFirstAccess: true
+            }
+          }
+        });
+
+        if (authError) throw authError;
+
+        alert(`USUÁRIO CONVIDADO!\n\nE-mail enviado por ${SENDER_EMAIL} para ${formData.email}!\n\nLink de Acesso: ${SYSTEM_LINK}\nSenha Provisória: ${tempPass}\n\nO usuário deverá trocar a senha no primeiro acesso.`);
+      }
+
+      closeForm();
+      fetchUsers();
+    } catch (err: any) {
+      alert('Erro ao processar: ' + err.message);
+    } finally {
+      setSaving(false);
     }
-
-    closeForm();
   };
 
   const closeForm = () => {
@@ -79,55 +124,53 @@ const UserReg: React.FC = () => {
     setShowForm(true);
   };
 
-  const handleManualPassword = (id: string) => {
-    const user = users.find(u => u.id === id);
-    if (!user) return;
+  const handleToggleBlock = async (user: User) => {
+    const newBlockedState = user.status !== 'BLOCKED';
+    const actionLabel = newBlockedState ? 'BLOQUEAR' : 'DESBLOQUEAR';
 
-    const newPass = prompt(`Definir nova senha manual para ${user.nome}:`);
-    if (newPass && newPass.length >= 4) {
-      const updated = users.map(u => {
-        if (u.id === id) {
-          return { ...u, password: newPass, isFirstAccess: false };
-        }
-        return u;
-      });
-      saveToStorage(updated);
-      alert('Senha alterada manualmente com sucesso!');
-    } else if (newPass) {
-      alert('A senha deve ter pelo menos 4 caracteres.');
-    }
-  };
-
-  const handleResetPassword = (id: string) => {
-    const user = users.find(u => u.id === id);
-    if (!user) return;
-
-    if (confirm(`Deseja realmente RESETAR a senha de ${user.nome}? Uma nova senha será gerada e enviada por e-mail.`)) {
-      const tempPass = generateTempPassword();
-      const updated = users.map(u => {
-        if (u.id === id) {
-          return { ...u, password: tempPass, isFirstAccess: true };
-        }
-        return u;
-      });
-
-      saveToStorage(updated);
-      alert(`SENHA RESETADA!\n\nE-mail de redefinição enviado por ${SENDER_EMAIL} para ${user.email}!\n\nNova Senha Provisória: ${tempPass}`);
-    }
-  };
-
-  const handleDelete = (id: string) => {
-    const user = users.find(u => u.id === id);
-    if (!user) return;
-
-    if (user.email === 'sergio@sintektecnologia.com.br') {
-      alert('Este usuário é o administrador mestre e não pode ser removido.');
+    if (user.role === 'MASTER_ADMIN') {
+      alert('Administradores Master não podem ser bloqueados.');
       return;
     }
 
-    if (confirm(`Deseja realmente EXCLUIR o usuário ${user.nome}? Esta ação é irreversível.`)) {
-      const updated = users.filter(u => u.id !== id);
-      saveToStorage(updated);
+    if (confirm(`Deseja realmente ${actionLabel} o usuário ${user.nome}?`)) {
+      setLoading(true);
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_blocked: newBlockedState, failed_attempts: 0 })
+        .eq('id', user.id);
+
+      if (error) {
+        alert('Erro ao atualizar status: ' + error.message);
+      } else {
+        fetchUsers();
+      }
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string, name: string, role: string) => {
+    if (role === 'MASTER_ADMIN') {
+      alert('Administradores Master não podem ser removidos.');
+      return;
+    }
+
+    if (confirm(`Deseja realmente EXCLUIR o usuário ${name}? Esta ação removerá o perfil do banco de dados.`)) {
+      setLoading(true);
+      // Profile delete is handled by cascade if we delete from auth, 
+      // but we might not have permissions to delete from auth directly.
+      // We delete from profiles at least.
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        alert('Erro ao excluir usuário: ' + error.message);
+      } else {
+        fetchUsers();
+      }
+      setLoading(false);
     }
   };
 
@@ -138,7 +181,7 @@ const UserReg: React.FC = () => {
           <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Gestão de Usuários</h1>
           <p className="text-slate-600 dark:text-text-secondary text-base font-medium">Controle total de acessos e credenciais.</p>
         </div>
-        {!showForm && (
+        {!showForm && user.role === 'MASTER_ADMIN' && (
           <button
             onClick={() => setShowForm(true)}
             className="px-8 h-12 rounded-xl bg-primary text-background-dark font-black shadow-lg shadow-primary/20 flex items-center gap-2 hover:scale-[1.02] transition-all"
@@ -199,20 +242,30 @@ const UserReg: React.FC = () => {
             </div>
             <div className="space-y-2 md:col-span-2">
               <label className="text-[10px] font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">Perfil de Acesso</label>
-              <div className="flex gap-4 mt-2">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, role: 'MASTER_ADMIN' })}
+                  className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${formData.role === 'MASTER_ADMIN' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 dark:border-surface-highlight text-slate-400'}`}
+                >
+                  <ShieldCheck className="w-5 h-5 mb-1" />
+                  <span className="text-[9px] font-black uppercase tracking-widest">Master Admin</span>
+                </button>
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, role: 'ADMIN' })}
-                  className={`flex-1 h-14 rounded-xl border-2 font-black text-xs tracking-widest transition-all ${formData.role === 'ADMIN' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 dark:border-surface-highlight text-slate-400'}`}
+                  className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${formData.role === 'ADMIN' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 dark:border-surface-highlight text-slate-400'}`}
                 >
-                  ADMINISTRADOR (ACESSO GERAL)
+                  <Edit3 className="w-5 h-5 mb-1" />
+                  <span className="text-[9px] font-black uppercase tracking-widest">Administrador</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, role: 'USER' })}
-                  className={`flex-1 h-14 rounded-xl border-2 font-black text-xs tracking-widest transition-all ${formData.role === 'USER' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 dark:border-surface-highlight text-slate-400'}`}
+                  className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${formData.role === 'USER' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 dark:border-surface-highlight text-slate-400'}`}
                 >
-                  USUÁRIO (SOMENTE CONSULTA)
+                  <Search className="w-5 h-5 mb-1" />
+                  <span className="text-[9px] font-black uppercase tracking-widest">Usuário</span>
                 </button>
               </div>
             </div>
@@ -220,12 +273,15 @@ const UserReg: React.FC = () => {
               <button
                 type="button"
                 onClick={closeForm}
-                className="px-8 h-14 border border-slate-200 dark:border-surface-highlight text-slate-600 dark:text-text-secondary font-black rounded-2xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all"
+                className="px-8 h-12 border border-slate-200 dark:border-surface-highlight text-slate-600 dark:text-text-secondary font-black rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all text-xs tracking-widest"
               >
                 CANCELAR
               </button>
-              <button className="px-12 h-14 bg-primary text-background-dark font-black rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all">
-                {editingUserId ? 'SALVAR ALTERAÇÕES' : 'CADASTRAR E ENVIAR SENHA'}
+              <button
+                disabled={saving}
+                className="px-10 h-12 bg-primary text-background-dark font-black rounded-xl shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+              >
+                {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : editingUserId ? 'SALVAR ALTERAÇÕES' : 'ENVIAR CONVITE'}
               </button>
             </div>
           </form>
@@ -241,11 +297,19 @@ const UserReg: React.FC = () => {
                 <th className="px-8 py-6">E-mail / Login</th>
                 <th className="px-8 py-6">Perfil</th>
                 <th className="px-8 py-6">Status Senha</th>
-                <th className="px-8 py-6 text-center">Ações</th>
+                {user.role === 'MASTER_ADMIN' && <th className="px-8 py-6 text-center">Ações</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-surface-highlight">
-              {users.map(u => (
+              {fetching ? (
+                <tr>
+                  <td colSpan={5} className="py-20 text-center text-slate-400 font-bold uppercase tracking-widest animate-pulse italic">Sincronizando com Supabase...</td>
+                </tr>
+              ) : users.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-20 text-center text-slate-400 font-bold uppercase tracking-widest italic">Nenhum usuário cadastrado em profiles.</td>
+                </tr>
+              ) : users.map(u => (
                 <tr key={u.id} className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors group">
                   <td className="px-8 py-5">
                     <p className="font-black text-slate-900 dark:text-white text-sm">{u.nome}</p>
@@ -253,55 +317,48 @@ const UserReg: React.FC = () => {
                   </td>
                   <td className="px-8 py-5 text-sm font-bold text-slate-600 dark:text-slate-300">{u.email}</td>
                   <td className="px-8 py-5">
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase border ${u.role === 'ADMIN' ? 'bg-primary/10 text-primary border-primary/20' : 'bg-slate-200 dark:bg-surface-highlight text-slate-600 dark:text-text-secondary border-black/5 dark:border-white/5'}`}>
-                      {u.role === 'ADMIN' ? 'Administrador' : 'Consulta'}
+                    <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase border ${u.role === 'MASTER_ADMIN' ? 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20' : u.role === 'ADMIN' ? 'bg-primary/10 text-primary border-primary/20' : 'bg-slate-200 dark:bg-surface-highlight text-slate-600 dark:text-text-secondary border-black/5 dark:border-white/5'}`}>
+                      {u.role === 'MASTER_ADMIN' ? 'Master Admin' : u.role === 'ADMIN' ? 'Administrador' : 'Usuário'}
                     </span>
                   </td>
                   <td className="px-8 py-5">
-                    {u.isFirstAccess ? (
-                      <span className="flex items-center gap-2 text-[10px] font-black text-yellow-600 dark:text-yellow-500 uppercase tracking-widest">
-                        <span className="size-2 bg-yellow-500 rounded-full animate-pulse"></span> Pendente
+                    {u.status === 'BLOCKED' ? (
+                      <span className="flex items-center gap-2 text-[10px] font-black text-danger uppercase tracking-widest">
+                        <Lock className="w-3 h-3" /> Bloqueado
                       </span>
                     ) : (
                       <span className="flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-widest">
-                        <span className="size-2 bg-primary rounded-full"></span> Definida
+                        <ShieldCheck className="w-3 h-3" /> Ativo
                       </span>
                     )}
                   </td>
-                  <td className="px-8 py-5 text-center">
-                    <div className="flex justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => handleEdit(u)}
-                        className="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-500/10 rounded-xl transition-all"
-                        title="Editar Dados"
-                      >
-                        <span className="material-symbols-outlined text-lg">edit</span>
-                      </button>
-                      <button
-                        onClick={() => handleManualPassword(u.id)}
-                        className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-all"
-                        title="Alterar Senha Manualmente"
-                      >
-                        <span className="material-symbols-outlined text-lg">key</span>
-                      </button>
-                      <button
-                        onClick={() => handleResetPassword(u.id)}
-                        className="p-2 text-slate-400 hover:text-yellow-500 hover:bg-yellow-500/10 rounded-xl transition-all"
-                        title="Resetar Senha (E-mail)"
-                      >
-                        <span className="material-symbols-outlined text-lg">lock_reset</span>
-                      </button>
-                      {u.email !== 'sergio@sintektecnologia.com.br' && (
+                  {user.role === 'MASTER_ADMIN' && (
+                    <td className="px-8 py-5 text-center">
+                      <div className="flex justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
-                          onClick={() => handleDelete(u.id)}
-                          className="p-2 text-slate-400 hover:text-danger hover:bg-danger/10 rounded-xl transition-all"
-                          title="Excluir Usuário"
+                          onClick={() => handleEdit(u)}
+                          className="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-500/10 rounded-xl transition-all"
+                          title="Editar Dados"
                         >
-                          <span className="material-symbols-outlined text-lg">delete</span>
+                          <Edit3 className="w-4 h-4" />
                         </button>
-                      )}
-                    </div>
-                  </td>
+                        <button
+                          onClick={() => handleToggleBlock(u)}
+                          className={`p-2 rounded-xl transition-all ${u.status === 'BLOCKED' ? 'text-green-500 hover:bg-green-500/10' : 'text-slate-400 hover:text-danger hover:bg-danger/10'}`}
+                          title={u.status === 'BLOCKED' ? 'Desbloquear' : 'Bloquear'}
+                        >
+                          {u.status === 'BLOCKED' ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                        </button>
+                        <button
+                          onClick={() => handleDelete(u.id, u.nome, u.role)}
+                          className="p-2 text-slate-400 hover:text-danger hover:bg-danger/10 rounded-xl transition-all"
+                          title="Excluir Perfil"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

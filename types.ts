@@ -24,7 +24,7 @@ export interface Investment {
   yield: number;
 }
 
-export type UserRole = 'ADMIN' | 'USER';
+export type UserRole = 'MASTER_ADMIN' | 'ADMIN' | 'USER';
 
 export interface User {
   id: string;
@@ -35,6 +35,17 @@ export interface User {
   role: UserRole;
   password?: string;
   isFirstAccess: boolean;
+  status?: 'ACTIVE' | 'BLOCKED';
+  failed_attempts?: number;
+}
+
+export interface Partner {
+  id: string;
+  company_id: string;
+  name: string;
+  cpf: string;
+  participation_percentage: number;
+  created_at?: string;
 }
 
 export interface Company {
@@ -44,4 +55,5 @@ export interface Company {
   razao_social: string;
   email: string;
   created_at?: string;
+  partners?: Partner[];
 }

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { validateCNPJ, formatCNPJ } from '../../utils/helpers';
 import { User, Company } from '../../types';
 import { supabase } from '../../lib/supabase';
-import { Edit3, Trash2, PlusCircle, Building2, Search, X } from 'lucide-react';
+import { Edit3, Trash2, PlusCircle, Building2, Search, X, Users, UserPlus, Trash } from 'lucide-react';
 
 const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
   const [loading, setLoading] = useState(false);
@@ -22,6 +22,9 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
     nomeFantasia: '',
     email: ''
   });
+
+  const [partners, setPartners] = useState<{ name: string; cpf: string; participation: string }[]>([]);
+  const [newPartner, setNewPartner] = useState({ name: '', cpf: '', participation: '' });
 
   useEffect(() => {
     fetchCompanies();
@@ -84,28 +87,78 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
       email: formData.email
     };
 
+    let companyId = editingId;
     let result;
+
     if (editingId) {
       result = await supabase
         .from('companies')
         .update(payload)
-        .eq('id', editingId);
+        .eq('id', editingId)
+        .select()
+        .single();
     } else {
       result = await supabase
         .from('companies')
-        .insert([payload]);
+        .insert([payload])
+        .select()
+        .single();
     }
 
     if (result.error) {
       alert('Erro ao salvar empresa: ' + result.error.message);
-    } else {
-      resetForm();
-      fetchCompanies();
+      setSaving(false);
+      return;
     }
+
+    companyId = result.data.id;
+
+    // Handle Partners
+    if (companyId) {
+      // For simplicity in this demo/MVP, we delete all existing partners and re-insert
+      // In a production app with IDs, we would do a more precise sync
+      if (editingId) {
+        await supabase.from('company_partners').delete().eq('company_id', companyId);
+      }
+
+      if (partners.length > 0) {
+        const partnersPayload = partners.map(p => ({
+          company_id: companyId,
+          name: p.name,
+          cpf: p.cpf,
+          participation_percentage: parseFloat(p.participation)
+        }));
+
+        const { error: partnersError } = await supabase
+          .from('company_partners')
+          .insert(partnersPayload);
+
+        if (partnersError) {
+          console.error('Error saving partners:', partnersError);
+          alert('Empresa salva, mas houve erro ao salvar sócios: ' + partnersError.message);
+        }
+      }
+    }
+
+    resetForm();
+    fetchCompanies();
     setSaving(false);
   };
 
-  const handleEdit = (company: Company) => {
+  const addPartner = () => {
+    if (!newPartner.name || !newPartner.cpf || !newPartner.participation) {
+      alert('Preencha os dados do sócio');
+      return;
+    }
+    setPartners([...partners, { ...newPartner }]);
+    setNewPartner({ name: '', cpf: '', participation: '' });
+  };
+
+  const removePartner = (index: number) => {
+    setPartners(partners.filter((_, i) => i !== index));
+  };
+
+  const handleEdit = async (company: Company) => {
     setFormData({
       cnpj: company.cnpj || '',
       razaoSocial: company.razao_social || '',
@@ -114,6 +167,23 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
     });
     setEditingId(company.id);
     setShowForm(true);
+
+    // Fetch Partners
+    const { data: partnersData, error: partnersError } = await supabase
+      .from('company_partners')
+      .select('*')
+      .eq('company_id', company.id);
+
+    if (!partnersError && partnersData) {
+      setPartners(partnersData.map(p => ({
+        name: p.name,
+        cpf: p.cpf,
+        participation: p.participation_percentage.toString()
+      })));
+    } else {
+      setPartners([]);
+    }
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -134,6 +204,8 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
 
   const resetForm = () => {
     setFormData({ cnpj: '', razaoSocial: '', nomeFantasia: '', email: '' });
+    setPartners([]);
+    setNewPartner({ name: '', cpf: '', participation: '' });
     setEditingId(null);
     setShowForm(false);
     setError('');
@@ -169,18 +241,20 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
               className="pl-11 pr-4 h-12 rounded-xl border border-slate-200 dark:border-surface-highlight bg-white dark:bg-surface-dark text-slate-900 dark:text-white text-sm font-bold w-64 focus:ring-2 focus:ring-primary outline-none transition-all"
             />
           </div>
-          <button
-            onClick={() => {
-              if (showForm && !editingId) setShowForm(false);
-              else {
-                resetForm();
-                setShowForm(true);
-              }
-            }}
-            className={`flex items-center gap-2 px-6 h-12 rounded-xl transition-all font-black text-sm shadow-lg ${showForm && !editingId ? 'bg-slate-200 dark:bg-surface-highlight text-slate-900 dark:text-white' : 'bg-primary text-background-dark shadow-primary/20 hover:bg-primary-hover'}`}
-          >
-            {showForm && !editingId ? <><X className="w-4 h-4" /> Cancelar</> : <><PlusCircle className="w-4 h-4" /> Adicionar Empresa</>}
-          </button>
+          {user.role === 'MASTER_ADMIN' && (
+            <button
+              onClick={() => {
+                if (showForm && !editingId) setShowForm(false);
+                else {
+                  resetForm();
+                  setShowForm(true);
+                }
+              }}
+              className={`flex items-center gap-2 px-6 h-12 rounded-xl transition-all font-black text-sm shadow-lg ${showForm && !editingId ? 'bg-slate-200 dark:bg-surface-highlight text-slate-900 dark:text-white' : 'bg-primary text-background-dark shadow-primary/20 hover:bg-primary-hover'}`}
+            >
+              {showForm && !editingId ? <><X className="w-4 h-4" /> Cancelar</> : <><PlusCircle className="w-4 h-4" /> Adicionar Empresa</>}
+            </button>
+          )}
         </div>
       </div>
 
@@ -244,6 +318,87 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
                   placeholder="contato@empresa.com.br"
                 />
               </div>
+
+              {/* Partners Section */}
+              <div className="md:col-span-12 space-y-6 pt-6 border-t border-slate-100 dark:border-surface-highlight">
+                <div className="flex items-center gap-2">
+                  <Users className="text-primary w-5 h-5" />
+                  <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">Sócios</h4>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end bg-slate-50 dark:bg-surface-darker/50 p-6 rounded-2xl border border-slate-100 dark:border-surface-highlight/30">
+                  <div className="md:col-span-4 space-y-2">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Nome do Sócio</label>
+                    <input
+                      value={newPartner.name}
+                      onChange={e => setNewPartner({ ...newPartner, name: e.target.value })}
+                      className="h-10 w-full rounded-lg border border-slate-200 dark:border-surface-highlight bg-white dark:bg-surface-dark px-3 text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold"
+                      placeholder="Ex: Carlos Alberto"
+                    />
+                  </div>
+                  <div className="md:col-span-3 space-y-2">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">CPF</label>
+                    <input
+                      value={newPartner.cpf}
+                      onChange={e => setNewPartner({ ...newPartner, cpf: e.target.value })}
+                      className="h-10 w-full rounded-lg border border-slate-200 dark:border-surface-highlight bg-white dark:bg-surface-dark px-3 text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold"
+                      placeholder="000.000.000-00"
+                    />
+                  </div>
+                  <div className="md:col-span-3 space-y-2">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Participação %</label>
+                    <input
+                      type="number"
+                      value={newPartner.participation}
+                      onChange={e => setNewPartner({ ...newPartner, participation: e.target.value })}
+                      className="h-10 w-full rounded-lg border border-slate-200 dark:border-surface-highlight bg-white dark:bg-surface-dark px-3 text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold text-right"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <button
+                      type="button"
+                      onClick={addPartner}
+                      className="w-full h-10 rounded-lg bg-surface-highlight text-white flex items-center justify-center gap-2 text-xs font-black hover:bg-slate-600 transition-all uppercase tracking-widest"
+                    >
+                      <UserPlus className="w-4 h-4" /> Add
+                    </button>
+                  </div>
+                </div>
+
+                {partners.length > 0 && (
+                  <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-surface-highlight bg-white dark:bg-surface-dark">
+                    <table className="w-full text-left text-sm">
+                      <thead className="bg-slate-50 dark:bg-surface-highlight/30 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                        <tr>
+                          <th className="px-5 py-3 text-left">Nome</th>
+                          <th className="px-5 py-3 text-left">CPF</th>
+                          <th className="px-5 py-3 text-right">%</th>
+                          <th className="px-5 py-3 text-center">Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-surface-highlight">
+                        {partners.map((p, idx) => (
+                          <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-surface-highlight/10 transition-colors">
+                            <td className="px-5 py-3 font-bold text-slate-900 dark:text-white">{p.name}</td>
+                            <td className="px-5 py-3 font-medium text-slate-600 dark:text-text-secondary">{p.cpf}</td>
+                            <td className="px-5 py-3 font-black text-slate-900 dark:text-white text-right">{p.participation}%</td>
+                            <td className="px-5 py-3 text-center">
+                              <button
+                                type="button"
+                                onClick={() => removePartner(idx)}
+                                className="p-2 text-slate-400 hover:text-danger hover:bg-danger/10 rounded-lg transition-all"
+                              >
+                                <Trash className="w-4 h-4" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="flex justify-end gap-4 pt-4 border-t border-slate-100 dark:border-surface-highlight">
@@ -283,7 +438,7 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
                   <th className="px-8 py-5">Nome Fantasia / Razão Social</th>
                   <th className="px-8 py-5">CNPJ</th>
                   <th className="px-8 py-5">E-mail</th>
-                  <th className="px-8 py-5 text-center">Ações</th>
+                  {user.role === 'MASTER_ADMIN' && <th className="px-8 py-5 text-center">Ações</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-surface-highlight">
@@ -297,24 +452,26 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
                     </td>
                     <td className="px-8 py-5 text-sm font-bold text-slate-600 dark:text-slate-300 whitespace-nowrap">{company.cnpj}</td>
                     <td className="px-8 py-5 text-sm font-bold text-slate-600 dark:text-slate-300">{company.email}</td>
-                    <td className="px-8 py-5">
-                      <div className="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                        <button
-                          onClick={() => handleEdit(company)}
-                          className="p-2.5 hover:bg-blue-500/10 text-slate-400 hover:text-blue-500 rounded-xl transition-all"
-                          title="Editar"
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(company.id, company.name)}
-                          className="p-2.5 hover:bg-danger/10 text-slate-400 hover:text-danger rounded-xl transition-all"
-                          title="Excluir"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
+                    {user.role === 'MASTER_ADMIN' && (
+                      <td className="px-8 py-5">
+                        <div className="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                          <button
+                            onClick={() => handleEdit(company)}
+                            className="p-2.5 hover:bg-blue-500/10 text-slate-400 hover:text-blue-500 rounded-xl transition-all"
+                            title="Editar"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(company.id, company.name)}
+                            className="p-2.5 hover:bg-danger/10 text-slate-400 hover:text-danger rounded-xl transition-all"
+                            title="Excluir"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

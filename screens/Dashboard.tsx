@@ -1,6 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User } from '../types';
+import { supabase } from '../lib/supabase';
+import { ShieldAlert, Unlock, ArrowRight } from 'lucide-react';
 
 interface KPIRecord {
   id: string;
@@ -215,6 +217,22 @@ const kpiData: Record<string, KPIModalData> = {
 const Dashboard: React.FC<{ user: User }> = ({ user }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedKPI, setSelectedKPI] = useState<KPIModalData | null>(null);
+  const [securityAlerts, setSecurityAlerts] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (user.role === 'MASTER_ADMIN') {
+      fetchSecurityAlerts();
+    }
+  }, [user]);
+
+  const fetchSecurityAlerts = async () => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, nome, email, failed_attempts')
+      .eq('is_blocked', true);
+
+    setSecurityAlerts(data || []);
+  };
 
   const handleKPIClick = (kpiKey: string) => {
     setSelectedKPI(kpiData[kpiKey]);
@@ -226,6 +244,17 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
     setSelectedKPI(null);
   };
 
+  const handleUnblock = async (id: string) => {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ is_blocked: false, failed_attempts: 0 })
+      .eq('id', id);
+
+    if (!error) {
+      fetchSecurityAlerts();
+    }
+  };
+
   return (
     <div className="p-6 lg:p-10 space-y-10 max-w-[1600px] mx-auto">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -234,7 +263,7 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
           <h1 className="text-slate-900 dark:text-white text-4xl font-black tracking-tight">Hoje, 24 de Outubro</h1>
         </div>
         <div className="flex gap-3">
-          {user.role === 'ADMIN' && (
+          {(user.role === 'MASTER_ADMIN' || user.role === 'ADMIN') && (
             <button className="px-6 py-2.5 bg-primary text-background-dark font-black rounded-xl text-sm hover:bg-primary-hover transition-all flex items-center gap-2 shadow-lg shadow-primary/20">
               <span className="material-symbols-outlined">add</span> Novo Lançamento
             </button>
@@ -244,6 +273,36 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
           </button>
         </div>
       </div>
+
+      {user.role === 'MASTER_ADMIN' && securityAlerts.length > 0 && (
+        <div className="bg-danger/10 border border-danger/20 rounded-2xl p-6 animate-in slide-in-from-left duration-500">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="p-2 bg-danger/20 rounded-lg text-danger">
+              <ShieldAlert className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">Alertas de Segurança</h3>
+              <p className="text-sm text-slate-600 dark:text-text-secondary">{securityAlerts.length} usuário(s) bloqueado(s) por excesso de tentativas.</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {securityAlerts.map(alert => (
+              <div key={alert.id} className="bg-white dark:bg-surface-dark p-4 rounded-xl border border-danger/10 flex items-center justify-between shadow-sm">
+                <div>
+                  <p className="font-black text-slate-900 dark:text-white text-sm">{alert.nome}</p>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{alert.email}</p>
+                </div>
+                <button
+                  onClick={() => handleUnblock(alert.id)}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-danger text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition-all"
+                >
+                  <Unlock className="w-3 h-3" /> Desbloquear
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <DashboardCard

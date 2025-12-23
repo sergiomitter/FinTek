@@ -186,9 +186,11 @@ const CustomerReg: React.FC<{ user: User }> = ({ user }) => {
 
           <div className="flex flex-col-reverse sm:flex-row justify-end gap-4 pt-8 border-t border-slate-200 dark:border-surface-highlight">
             <button type="button" className="px-8 h-12 rounded-xl border border-slate-200 dark:border-surface-highlight text-slate-900 dark:text-white font-black hover:bg-slate-100 dark:hover:bg-white/5 transition-all uppercase tracking-widest text-xs">Cancelar</button>
-            <button className="px-10 h-12 rounded-xl bg-primary text-background-dark font-black shadow-lg shadow-primary/20 flex items-center justify-center gap-2 hover:bg-primary-hover transition-all">
-              <span className="material-symbols-outlined">save</span> Salvar Cliente
-            </button>
+            {user.role === 'MASTER_ADMIN' && (
+              <button className="px-10 h-12 rounded-xl bg-primary text-background-dark font-black shadow-lg shadow-primary/20 flex items-center justify-center gap-2 hover:bg-primary-hover transition-all">
+                <span className="material-symbols-outlined">save</span> Salvar Cliente
+              </button>
+            )}
           </div>
         </form>
       </div>

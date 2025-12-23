@@ -49,9 +49,11 @@ const SupplierReg: React.FC<{ user: User }> = ({ user }) => {
           <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">Novo Fornecedor</h2>
           <p className="text-slate-600 dark:text-text-secondary text-base font-medium">Registre parceiros comerciais. Informe o CNPJ para preenchimento rápido.</p>
         </div>
-        <button className="px-8 h-12 rounded-xl bg-primary text-background-dark font-black shadow-lg shadow-primary/20 hover:bg-primary-hover transition-all uppercase tracking-widest text-xs">
-          Salvar
-        </button>
+        {user.role === 'MASTER_ADMIN' && (
+          <button className="px-8 h-12 rounded-xl bg-primary text-background-dark font-black shadow-lg shadow-primary/20 hover:bg-primary-hover transition-all uppercase tracking-widest text-xs">
+            Salvar
+          </button>
+        )}
       </div>
 
       <div className="bg-white dark:bg-surface-dark border border-slate-200 dark:border-surface-highlight rounded-2xl p-8 shadow-sm">

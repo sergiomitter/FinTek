@@ -75,9 +75,11 @@ const BankReg: React.FC<{ user: User }> = ({ user }) => {
         </div>
 
         <div className="flex justify-end pt-8 border-t border-surface-highlight">
-          <button className="px-10 h-12 rounded-xl bg-primary text-background-dark font-black shadow-lg shadow-primary/20 hover:bg-primary-hover transition-all">
-            Salvar Conta
-          </button>
+          {user.role === 'MASTER_ADMIN' && (
+            <button className="px-10 h-12 rounded-xl bg-primary text-background-dark font-black shadow-lg shadow-primary/20 hover:bg-primary-hover transition-all">
+              Salvar Conta
+            </button>
+          )}
         </div>
       </div>
     </div>

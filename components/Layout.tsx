@@ -13,7 +13,7 @@ interface SidebarItemProps {
 }
 
 const SidebarItem: React.FC<SidebarItemProps> = ({ to, icon, label, isActive, isAdminOnly, userRole }) => {
-  if (isAdminOnly && userRole !== 'ADMIN') return null;
+  if (isAdminOnly && userRole !== 'MASTER_ADMIN') return null;
 
   return (
     <Link
@@ -80,22 +80,26 @@ const Layout: React.FC<{ children: React.ReactNode, user: User, onLogout: () => 
             <SidebarItem to="/receber" icon="account_balance_wallet" label="A Receber" isActive={isActive('/receber')} />
             <SidebarItem to="/investimentos" icon="trending_up" label="Investimentos" isActive={isActive('/investimentos')} />
 
-            <div className="px-4 py-3 mt-4">
-              <p className="text-[10px] font-black text-slate-400 dark:text-text-secondary uppercase tracking-[0.2em]">Configurações</p>
-            </div>
-            <SidebarItem to="/cadastros/empresa" icon="domain" label="Empresas" isActive={isActive('/cadastros/empresa')} />
-            <SidebarItem to="/cadastros/cliente" icon="group" label="Clientes" isActive={isActive('/cadastros/cliente')} />
-            <SidebarItem to="/cadastros/pessoa" icon="person" label="Pessoas" isActive={isActive('/cadastros/pessoa')} />
-            <SidebarItem to="/cadastros/banco" icon="account_balance" label="Bancos" isActive={isActive('/cadastros/banco')} />
-            <SidebarItem to="/cadastros/fornecedor" icon="local_shipping" label="Fornecedores" isActive={isActive('/cadastros/fornecedor')} />
+            {user.role !== 'USER' && (
+              <>
+                <div className="px-4 py-3 mt-4">
+                  <p className="text-[10px] font-black text-slate-400 dark:text-text-secondary uppercase tracking-[0.2em]">Configurações</p>
+                </div>
+                <SidebarItem to="/cadastros/empresa" icon="domain" label="Empresas" isActive={isActive('/cadastros/empresa')} />
+                <SidebarItem to="/cadastros/cliente" icon="group" label="Clientes" isActive={isActive('/cadastros/cliente')} />
+                <SidebarItem to="/cadastros/pessoa" icon="person" label="Pessoas" isActive={isActive('/cadastros/pessoa')} />
+                <SidebarItem to="/cadastros/banco" icon="account_balance" label="Bancos" isActive={isActive('/cadastros/banco')} />
+                <SidebarItem to="/cadastros/fornecedor" icon="local_shipping" label="Fornecedores" isActive={isActive('/cadastros/fornecedor')} />
+              </>
+            )}
 
-            {user.role === 'ADMIN' && (
+            {(user.role === 'MASTER_ADMIN' || user.role === 'ADMIN') && (
               <SidebarItem
                 to="/cadastros/usuarios"
                 icon="admin_panel_settings"
                 label="Usuários"
                 isActive={isActive('/cadastros/usuarios')}
-                isAdminOnly
+                isAdminOnly={user.role !== 'MASTER_ADMIN'} // only MASTER can edit user, but maybe both see? User said: "5) criar o perfil de Administrador Master com acesso Geral do sistema, este usuário deve ter visão de todos os menus e direito de alteração;"
                 userRole={user.role}
               />
             )}

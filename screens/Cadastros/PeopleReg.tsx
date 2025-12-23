@@ -67,9 +67,11 @@ const PeopleReg: React.FC<{ user: User }> = ({ user }) => {
           </div>
 
           <div className="flex justify-end gap-4 pt-8 border-t border-slate-200 dark:border-surface-highlight">
-            <button className="h-12 px-10 rounded-xl bg-primary text-background-dark font-black shadow-lg shadow-primary/20 hover:bg-primary-hover transition-all uppercase tracking-widest text-xs">
-              Salvar Registro
-            </button>
+            {user.role === 'MASTER_ADMIN' && (
+              <button className="h-12 px-10 rounded-xl bg-primary text-background-dark font-black shadow-lg shadow-primary/20 hover:bg-primary-hover transition-all uppercase tracking-widest text-xs">
+                Salvar Registro
+              </button>
+            )}
           </div>
         </form>
       </div>
