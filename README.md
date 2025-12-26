@@ -1,6 +1,6 @@
 # FinTek - Gestão Financeira
 
-Sistema de gestão financeira integrado com Supabase e Gemini AI.
+Sistema de gestao financeira integrado com Supabase e Gemini AI.
 
 ## Run Locally
 

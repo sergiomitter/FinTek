@@ -8,7 +8,7 @@ const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 const SENDER_EMAIL = Deno.env.get('SENDER_EMAIL') || 'suporte@sintektecnologia.com.br'
-const SYSTEM_URL = Deno.env.get('SYSTEM_URL') || 'https://fintek-steel.vercel.app'
+const SYSTEM_URL = 'https://fintek-steel.vercel.app'  // Fixed URL - always use production URL
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -136,7 +136,7 @@ serve(async (req) => {
     </div>
     <div class="content">
       <div class="welcome">Olá, ${nome}!</div>
-      <p>Sua conta foi criada com sucesso! Você agora tem acesso ao sistema de gestão financeira FinTek.</p>
+      <p>Sua conta foi criada com sucesso! Você agora tem acesso ao sistema de gestao financeira FinTek.</p>
       
       <div class="credentials-box">
         <h3>🔐 Suas Credenciais de Acesso</h3>
