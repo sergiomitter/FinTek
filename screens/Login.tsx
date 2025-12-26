@@ -286,8 +286,7 @@ const Login: React.FC = () => {
         </div>
 
         <div className="text-center mb-10">
-          <h1 className="text-3xl font-black text-white tracking-tighter">FinTek</h1>
-          <p className="text-text-secondary text-sm font-medium">Painel Financeiro Integrado</p>
+          <h1 className="text-2xl font-black text-white tracking-tight">Gestão Financeira</h1>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
