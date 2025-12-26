@@ -58,8 +58,8 @@ const UserReg: React.FC<{ user: User }> = ({ user }) => {
 
     try {
       if (editingUserId) {
-        // Use RPC to update both auth and profile
-        const { data, error: rpcError } = await supabase.rpc('manage_user', {
+        // 1. Update basic info via RPC
+        const { error: rpcError } = await supabase.rpc('manage_user', {
           target_user_id: editingUserId,
           action: 'UPDATE',
           new_data: {
@@ -71,6 +71,23 @@ const UserReg: React.FC<{ user: User }> = ({ user }) => {
         });
 
         if (rpcError) throw rpcError;
+
+        // 2. If password was entered manually, update it via Edge Function
+        // Note: We use 'any' cast for formData to access newPassword which we will add shortly
+        const newPass = (formData as any).newPassword;
+        if (newPass && newPass.trim() !== '') {
+          const { data: pwdData, error: pwdError } = await supabase.functions.invoke('reset-password', {
+            body: {
+              userId: editingUserId,
+              action: 'ADMIN_UPDATE_PASSWORD',
+              newPassword: newPass.trim()
+            }
+          });
+
+          if (pwdError) throw pwdError;
+          if (!pwdData.success) throw new Error(pwdData.error || 'Erro ao atualizar senha.');
+        }
+
         alert('Dados do usuário atualizados com sucesso!');
       } else {
         const tempPass = generateTempPassword();
@@ -267,6 +284,24 @@ const UserReg: React.FC<{ user: User }> = ({ user }) => {
                   onChange={e => setFormData({ ...formData, funcao: e.target.value })}
                 />
               </div>
+
+              {/* Manual Password Reset Field - Added as requested */}
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-[10px] font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">
+                  Nova Senha Manual (Opcional)
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    className="w-full h-12 bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-surface-highlight rounded-xl px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold placeholder:font-normal placeholder:text-slate-400"
+                    placeholder="Digite para alterar a senha (sem enviar e-mail)..."
+                    value={(formData as any).newPassword || ''}
+                    onChange={e => setFormData({ ...formData, newPassword: e.target.value } as any)}
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1 ml-1">Deixe em branco para manter a senha atual.</p>
+                </div>
+              </div>
+
               <div className="space-y-2 md:col-span-2">
                 <label className="text-[10px] font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">Perfil de Acesso</label>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">

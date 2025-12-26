@@ -21,7 +21,7 @@ const corsHeaders = {
 interface ResetRequest {
     email?: string
     userId?: string
-    action: 'FORGOT_PASSWORD' | 'ADMIN_RESET'
+    action: 'FORGOT_PASSWORD' | 'ADMIN_RESET' | 'ADMIN_UPDATE_PASSWORD'
 }
 
 function generateTempPassword(): string {
@@ -68,6 +68,42 @@ serve(async (req) => {
                 console.log(`[reset-password] Email not found: ${email}`) // Internal log
                 return new Response(JSON.stringify({ success: true, message: 'Se o email existir, as instruções foram enviadas.' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
             }
+
+        } else if (action === 'ADMIN_UPDATE_PASSWORD') {
+            // Admin logic: Caller must be MASTER_ADMIN. Manual Password Set.
+            const authHeader = req.headers.get('Authorization')
+            if (!authHeader) throw new Error('Missing Authorization header')
+
+            const token = authHeader.replace('Bearer ', '')
+            const { data: { user: caller }, error: callerError } = await supabaseAdmin.auth.getUser(token)
+
+            if (callerError || !caller) throw new Error('Unauthorized call.')
+
+            const { data: callerProfile } = await supabaseAdmin
+                .from('profiles')
+                .select('role')
+                .eq('id', caller.id)
+                .single()
+
+            if (callerProfile?.role !== 'MASTER_ADMIN') {
+                throw new Error('Only Master Admins can update passwords.')
+            }
+
+            if (!userId) throw new Error('User ID required.')
+            const { newPassword } = await req.json()
+            if (!newPassword) throw new Error('New password required.')
+
+            // Update Password
+            const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+                userId,
+                { password: newPassword }
+            )
+            if (updateError) throw updateError
+
+            return new Response(
+                JSON.stringify({ success: true, message: 'Senha atualizada com sucesso.' }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+            )
 
         } else if (action === 'ADMIN_RESET') {
             // Admin logic: Caller must be MASTER_ADMIN.
@@ -165,7 +201,11 @@ serve(async (req) => {
             })
         })
 
-        if (!resendResponse.ok) console.error('Failed to send email via Resend')
+        if (!resendResponse.ok) {
+            const errorData = await resendResponse.text()
+            console.error('Failed to send email via Resend:', errorData)
+            throw new Error(`Erro ao enviar email (Resend): ${errorData}`)
+        }
 
         return new Response(
             JSON.stringify({ success: true, message: 'Senha resetada com sucesso.' }),
