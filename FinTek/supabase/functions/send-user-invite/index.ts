@@ -99,10 +99,11 @@ serve(async (req) => {
         console.log(`[send-user-invite] User created in Auth with ID: ${authData.user.id}`)
 
         // Step 2: Create profile in profiles table
-        console.log(`[send-user-invite] Creating profile...`)
+        console.log(`[send-user-invite] Creating/Updating profile...`)
+        // Use UPSERT because a Trigger might have already created the profile
         const { error: profileError } = await supabaseAdmin
             .from('profiles')
-            .insert({
+            .upsert({
                 id: authData.user.id,
                 nome,
                 email,
@@ -115,9 +116,9 @@ serve(async (req) => {
 
         if (profileError) {
             console.error(`[send-user-invite] Profile error:`, profileError)
-            // If profile creation fails, delete the auth user to maintain consistency
-            await supabaseAdmin.auth.admin.deleteUser(authData.user.id)
-            throw new Error(`Failed to create profile: ${profileError.message}`)
+            // If profile update fails, we might want to keep the auth user but alert triggers?
+            // For safety, let's just throw, but maybe not delete the user if the trigger created it.
+            throw new Error(`Failed to update profile: ${profileError.message}`)
         }
 
         console.log(`[send-user-invite] Profile created successfully`)

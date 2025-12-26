@@ -158,6 +158,26 @@ const UserReg: React.FC<{ user: User }> = ({ user }) => {
     }
   };
 
+  const handleResetPassword = async (id: string, name: string) => {
+    if (confirm(`Deseja resetar a senha de ${name}? O usuário receberá um e-mail com uma nova senha temporária.`)) {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('reset-password', {
+          body: { userId: id, action: 'ADMIN_RESET' }
+        });
+
+        if (error) throw error;
+        if (!data.success) throw new Error(data.error || 'Falha no reset.');
+
+        alert(`Senha resetada com sucesso! O e-mail foi enviado para ${name}.`);
+      } catch (err: any) {
+        alert('Erro ao resetar senha: ' + err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   const handleDelete = async (id: string, name: string, role: string) => {
     if (role === 'MASTER_ADMIN') {
       alert('Administradores Master não podem ser removidos.');
@@ -363,6 +383,13 @@ const UserReg: React.FC<{ user: User }> = ({ user }) => {
                           title="Excluir Perfil"
                         >
                           <Trash2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleResetPassword(u.id, u.nome)}
+                          className="p-2 text-slate-400 hover:text-amber-500 hover:bg-amber-500/10 rounded-xl transition-all"
+                          title="Resetar Senha"
+                        >
+                          <Mail className="w-4 h-4" />
                         </button>
                       </div>
                     </td>

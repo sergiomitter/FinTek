@@ -19,6 +19,13 @@ const Login: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [forgotEmail, setForgotEmail] = useState('');
 
+  /* New Effect to clean fields on mount */
+  React.useEffect(() => {
+    setEmail('');
+    setPassword('');
+    setError('');
+  }, []);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -67,7 +74,7 @@ const Login: React.FC = () => {
             throw new Error('Conta bloqueada após 3 tentativas inválidas.');
           }
         }
-        throw authError;
+        throw new Error('E-mail ou senha incorretos.');
       }
 
       // 3. Reset attempts on success
@@ -76,27 +83,30 @@ const Login: React.FC = () => {
           .from('profiles')
           .update({ failed_attempts: 0 })
           .eq('id', profile.id);
-      }
 
-      if (data.user) {
-        const isFirstAccess = data.user.user_metadata?.isFirstAccess;
-
-        if (isFirstAccess) {
+        // 4. CHECK FIRST ACCESS FORCE
+        if (profile.is_first_access) {
           const user: User = {
             id: data.user.id,
-            nome: data.user.user_metadata?.nome || data.user.email?.split('@')[0] || 'Usuário',
-            email: data.user.email || '',
-            celular: data.user.user_metadata?.celular || '',
-            funcao: data.user.user_metadata?.funcao || '',
-            role: (data.user.user_metadata?.role as UserRole) || 'USER',
-            isFirstAccess: true
+            nome: profile.nome || 'Usuário',
+            email: profile.email || '',
+            celular: profile.celular || '',
+            funcao: profile.funcao || '',
+            role: (profile.role as UserRole) || 'USER',
+            isFirstAccess: true,
+            status: 'ACTIVE'
           };
           setTempUser(user);
           setView('FIRST_ACCESS');
+          return; // Stop here, do not finish login flow until password changed
         }
       }
+
+      // Normal Login Flow continues (App.tsx will see session)
     } catch (err: any) {
       setError(err.message || 'Erro ao realizar login.');
+      // Force logout if we were half-logged in but needed to stop
+      await supabase.auth.signOut();
     } finally {
       setLoading(false);
     }
@@ -108,17 +118,20 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
-        redirectTo: window.location.origin + '/#/reset-password',
+      // Call our Request Password Function
+      const { data, error: fnError } = await supabase.functions.invoke('reset-password', {
+        body: { email: forgotEmail, action: 'FORGOT_PASSWORD' }
       });
 
-      if (resetError) throw resetError;
+      if (fnError) throw new Error(fnError.message || 'Erro de conexão.');
 
-      alert('RECUPERAÇÃO DE SENHA\n\nUm e-mail de recuperação foi enviado para ' + forgotEmail + '. Siga as instruções no e-mail.');
+      // We always show success for security
+      alert('RECUPERAÇÃO DE SENHA\n\nSe o e-mail estiver cadastrado, você receberá uma senha temporária em instantes.');
       setView('LOGIN');
       setForgotEmail('');
     } catch (err: any) {
       setError(err.message || 'Erro ao processar solicitação.');
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -139,14 +152,25 @@ const Login: React.FC = () => {
 
     setLoading(true);
     try {
+      // 1. Update Password in Auth
       const { error: updateError } = await supabase.auth.updateUser({
-        password: newPassword,
-        data: { isFirstAccess: false }
+        password: newPassword
       });
 
       if (updateError) throw updateError;
 
-      // onAuthStateChange will trigger and update the user in App.tsx
+      // 2. Update Profile to remove first_access flag
+      if (tempUser?.id) {
+        await supabase
+          .from('profiles')
+          .update({ is_first_access: false })
+          .eq('id', tempUser?.id);
+      }
+
+      // Success - App.tsx auth listener will pick up the session or user can re-login
+      alert('Senha atualizada com sucesso! Você já pode acessar o sistema.');
+      window.location.reload(); // Reload to ensure clean state and session pick-up
+
     } catch (err: any) {
       setError(err.message || 'Erro ao atualizar senha.');
     } finally {
