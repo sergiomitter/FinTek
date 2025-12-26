@@ -370,7 +370,7 @@ const Login: React.FC = () => {
         </form>
 
         <div className="mt-8 pt-8 border-t border-surface-highlight/50 text-center">
-          <p className="text-text-secondary text-[10px] font-black uppercase tracking-widest">FinTek &copy; 2023 - Sintek Tecnologia</p>
+          <p className="text-text-secondary text-[10px] font-black uppercase tracking-widest">FinTek &copy; 2023 - Sintek Tecnologia (v1.2) - Atualizado</p>
         </div>
       </div>
     </div>
