@@ -32,7 +32,7 @@ serve(async (req) => {
 
     try {
         console.log(`[send-user-invite] Request received. Method: ${req.method}`)
-        
+
         // Log Authorization header presence (do not log the full token for security)
         const authHeader = req.headers.get('Authorization')
         console.log(`[send-user-invite] Auth Header present: ${!!authHeader}`)
@@ -57,9 +57,9 @@ serve(async (req) => {
         // MANUAL AUTH CHECK
         // We verified the Gateway was blocking 401, so we moved check here.
         if (!authHeader) {
-             throw new Error('Missing Authorization header')
+            throw new Error('Missing Authorization header')
         }
-        
+
         // Optionally verify the user if needed, but for now we trust the Bearer token presence 
         // implies the client sent it. Ideally we should validate it:
         /*
@@ -258,6 +258,7 @@ serve(async (req) => {
 
     } catch (error: any) {
         console.error(`[send-user-invite] Error:`, error)
+        // Return 200 with error so client can read the message instead of generic "non-2xx"
         return new Response(
             JSON.stringify({
                 error: error.message || 'Internal server error',
@@ -265,7 +266,7 @@ serve(async (req) => {
             }),
             {
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-                status: 400
+                status: 200
             }
         )
     }
