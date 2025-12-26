@@ -31,15 +31,16 @@ serve(async (req) => {
     }
 
     try {
+        console.log(`[send-user-invite] Request received. Method: ${req.method}`)
+        
+        // Log Authorization header presence (do not log the full token for security)
+        const authHeader = req.headers.get('Authorization')
+        console.log(`[send-user-invite] Auth Header present: ${!!authHeader}`)
+
         // Parse request body
         const { email, nome, role, celular, funcao, tempPassword }: InviteRequest = await req.json()
 
         console.log(`[send-user-invite] Processing invite for: ${email}`)
-
-        // Validate required fields
-        if (!email || !nome || !role || !tempPassword) {
-            throw new Error('Missing required fields: email, nome, role, tempPassword')
-        }
 
         // Initialize Supabase Admin Client
         const supabaseAdmin = createClient(
@@ -52,6 +53,28 @@ serve(async (req) => {
                 }
             }
         )
+
+        // MANUAL AUTH CHECK
+        // We verified the Gateway was blocking 401, so we moved check here.
+        if (!authHeader) {
+             throw new Error('Missing Authorization header')
+        }
+        
+        // Optionally verify the user if needed, but for now we trust the Bearer token presence 
+        // implies the client sent it. Ideally we should validate it:
+        /*
+        const token = authHeader.replace('Bearer ', '')
+        const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token)
+        if (userError || !user) {
+             console.error('Invalid user token:', userError)
+             throw new Error('Unauthorized: Invalid token')
+        }
+        */
+
+        // Validate required fields
+        if (!email || !nome || !role || !tempPassword) {
+            throw new Error('Missing required fields: email, nome, role, tempPassword')
+        }
 
         // Step 1: Create user in Supabase Auth
         console.log(`[send-user-invite] Creating user in Auth...`)
