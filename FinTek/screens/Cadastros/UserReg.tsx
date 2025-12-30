@@ -106,9 +106,12 @@ const UserReg: React.FC<{ user: User }> = ({ user }) => {
           }
         });
 
-        if (fnError) throw new Error(fnError.message || 'Erro ao processar convite');
+        if (fnError) throw new Error(fnError.message || 'Erro de conexão ao convidar usuário');
 
-        if (fnData?.error) throw new Error(fnData.error);
+        // The Edge Function returns { success, error, warning... } with status 200 for better visibility
+        if (fnData?.success === false || fnData?.error) {
+          throw new Error(fnData.error || 'O servidor retornou um erro inesperado.');
+        }
 
         // Success Feedback
         if (fnData?.warning) {

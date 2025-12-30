@@ -76,6 +76,41 @@ serve(async (req) => {
             throw new Error('Missing required fields: email, nome, role, tempPassword')
         }
 
+        // Step 0: Clean up orphaned profiles with same email
+        console.log(`[send-user-invite] Checking for orphaned profiles with email: ${email}`)
+        const { data: existingProfiles, error: checkError } = await supabaseAdmin
+            .from('profiles')
+            .select('id, email')
+            .eq('email', email)
+
+        if (checkError) {
+            console.warn(`[send-user-invite] Warning while checking existing profiles:`, checkError)
+        } else if (existingProfiles && existingProfiles.length > 0) {
+            console.log(`[send-user-invite] Found ${existingProfiles.length} existing profile(s). Checking for orphans...`)
+            for (const profile of existingProfiles) {
+                // Check if this profile's ID corresponds to an active Auth user
+                const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(profile.id)
+
+                if (userError || !userData?.user) {
+                    console.log(`[send-user-invite] Profile ${profile.id} is orphaned. Deleting...`)
+                    const { error: deleteError } = await supabaseAdmin
+                        .from('profiles')
+                        .delete()
+                        .eq('id', profile.id)
+
+                    if (deleteError) {
+                        console.error(`[send-user-invite] Failed to delete orphaned profile ${profile.id}:`, deleteError)
+                        // We throw here because an existing email will cause createUser to fail later
+                        throw new Error(`Conflict: An orphaned profile with this email exists and could not be removed.`)
+                    }
+                } else {
+                    console.log(`[send-user-invite] Profile ${profile.id} belongs to active user ${userData.user.id}.`)
+                    // If it's an active user, we can't just recreate.
+                    throw new Error(`A user with email ${email} already exists and is active.`)
+                }
+            }
+        }
+
         // Step 1: Create user in Supabase Auth
         console.log(`[send-user-invite] Creating user in Auth...`)
         const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
@@ -93,7 +128,11 @@ serve(async (req) => {
 
         if (authError) {
             console.error(`[send-user-invite] Auth error:`, authError)
-            throw new Error(`Failed to create user in Auth: ${authError.message}`)
+            // Specific check for existing email in Auth
+            if (authError.message.includes('already registered')) {
+                throw new Error(`Este e-mail já está em uso por outro usuário ativo.`)
+            }
+            throw new Error(`Erro ao criar usuário no Auth: ${authError.message}`)
         }
 
         console.log(`[send-user-invite] User created in Auth with ID: ${authData.user.id}`)
