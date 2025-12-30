@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { validatePassword } from '../utils/helpers';
 import { User, UserRole } from '../types';
 import { supabase } from '../lib/supabase';
@@ -18,6 +18,12 @@ const Login: React.FC = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [forgotEmail, setForgotEmail] = useState('');
+
+  React.useEffect(() => {
+    setEmail('');
+    setPassword('');
+    setError('');
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

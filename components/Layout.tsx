@@ -80,7 +80,7 @@ const Layout: React.FC<{ children: React.ReactNode, user: User, onLogout: () => 
             <SidebarItem to="/receber" icon="account_balance_wallet" label="A Receber" isActive={isActive('/receber')} />
             <SidebarItem to="/investimentos" icon="trending_up" label="Investimentos" isActive={isActive('/investimentos')} />
 
-            {user.role !== 'USER' && (
+            {(user.role === 'MASTER_ADMIN' || user.role === 'ADMIN') && (
               <>
                 <div className="px-4 py-3 mt-4">
                   <p className="text-[10px] font-black text-slate-400 dark:text-text-secondary uppercase tracking-[0.2em]">Configurações</p>

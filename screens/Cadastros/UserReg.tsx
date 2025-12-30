@@ -4,7 +4,7 @@ import { User, UserRole } from '../../types';
 import { generateTempPassword, formatPhone } from '../../utils/helpers';
 import { createClient } from '@supabase/supabase-js';
 import { supabase, supabaseUrl, supabaseAnonKey } from '../../lib/supabase';
-import { UserPlus, Edit3, Trash2, ShieldCheck, Lock, Unlock, Mail, Loader2, X, Search } from 'lucide-react';
+import { UserPlus, Edit3, Trash2, ShieldCheck, Lock, Unlock, Mail, Loader2, X, Search, Key } from 'lucide-react';
 
 const UserReg: React.FC<{ user: User }> = ({ user }) => {
   const [loading, setLoading] = useState(false);
@@ -18,7 +18,8 @@ const UserReg: React.FC<{ user: User }> = ({ user }) => {
     email: '',
     celular: '',
     funcao: '',
-    role: 'USER'
+    role: 'USER',
+    password: ''
   });
 
   const SENDER_EMAIL = 'suporte@sintektecnologia.com.br';
@@ -66,7 +67,8 @@ const UserReg: React.FC<{ user: User }> = ({ user }) => {
             nome: formData.nome,
             celular: formData.celular,
             funcao: formData.funcao,
-            role: formData.role
+            role: formData.role,
+            password: formData.password
           }
         });
 
@@ -118,7 +120,7 @@ const UserReg: React.FC<{ user: User }> = ({ user }) => {
   const closeForm = () => {
     setShowForm(false);
     setEditingUserId(null);
-    setFormData({ nome: '', email: '', celular: '', funcao: '', role: 'USER' });
+    setFormData({ nome: '', email: '', celular: '', funcao: '', role: 'USER', password: '' });
   };
 
   const handleEdit = (user: User) => {
@@ -127,7 +129,8 @@ const UserReg: React.FC<{ user: User }> = ({ user }) => {
       email: user.email,
       celular: user.celular,
       funcao: user.funcao,
-      role: user.role
+      role: user.role,
+      password: ''
     });
     setEditingUserId(user.id);
     setShowForm(true);
@@ -177,6 +180,28 @@ const UserReg: React.FC<{ user: User }> = ({ user }) => {
         fetchUsers();
       }
       setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (u: User) => {
+    if (confirm(`Deseja realmente resetar a senha de ${u.nome}? Uma nova senha temporária será enviada por e-mail.`)) {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('reset-password', {
+          body: { userId: u.id, action: 'ADMIN_RESET' }
+        });
+
+        if (error) throw error;
+        if (data?.success) {
+          alert('Senha resetada com sucesso! O usuário recebeu um e-mail com a nova senha.');
+        } else {
+          throw new Error(data?.error || 'Erro desconhecido');
+        }
+      } catch (err: any) {
+        alert('Erro ao resetar senha: ' + err.message);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -247,6 +272,22 @@ const UserReg: React.FC<{ user: User }> = ({ user }) => {
                   onChange={e => setFormData({ ...formData, funcao: e.target.value })}
                 />
               </div>
+              {user.role === 'MASTER_ADMIN' && editingUserId && (
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-[10px] font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">Alterar Senha Manualmente (Opcional)</label>
+                  <div className="relative">
+                    <input
+                      type="password"
+                      className="w-full h-12 bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-surface-highlight rounded-xl px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold"
+                      value={formData.password}
+                      onChange={e => setFormData({ ...formData, password: e.target.value })}
+                      placeholder="Deixe em branco para manter a atual"
+                    />
+                    <Lock className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  </div>
+                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">Obs: Esta alteração não envia e-mail ao usuário.</p>
+                </div>
+              )}
               <div className="space-y-2 md:col-span-2">
                 <label className="text-[10px] font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">Perfil de Acesso</label>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
@@ -349,6 +390,13 @@ const UserReg: React.FC<{ user: User }> = ({ user }) => {
                           title="Editar Dados"
                         >
                           <Edit3 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleResetPassword(u)}
+                          className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-all"
+                          title="Resetar Senha (via E-mail)"
+                        >
+                          <Key className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleToggleBlock(u)}
