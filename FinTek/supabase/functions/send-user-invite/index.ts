@@ -1,155 +1,99 @@
-// Edge Function: send-user-invite
-// Purpose: Create user in Supabase Auth, create profile, and send welcome email
-
+// Edge Function: send-user-invite (v1.3.1-DEBUG)
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0'
-
-const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-const SENDER_EMAIL = Deno.env.get('SENDER_EMAIL') || 'suporte@sintektecnologia.com.br'
-const SYSTEM_URL = 'https://fintek-steel.vercel.app'
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
-interface InviteRequest {
-    email: string
-    nome: string
-    role: string
-    celular?: string
-    funcao?: string
-    tempPassword: string
-}
+console.log("[send-user-invite] SCRIPT LOADED - v1.3.1-DEBUG")
 
-Deno.serve(async (req) => {
-    // Handle CORS preflight requests
+serve(async (req) => {
+    console.log(`[send-user-invite] INVOKED: ${req.method} @ ${new Date().toISOString()}`)
+
+    // CORS PREFLIGHT
     if (req.method === 'OPTIONS') {
-        return new Response('ok', { headers: corsHeaders })
+        console.log("[send-user-invite] Returning OPTIONS 200")
+        return new Response('ok', { headers: corsHeaders, status: 200 })
     }
 
     try {
-        console.log(`[send-user-invite] Request received: ${req.method}`)
+        const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
+        const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+        const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
+        const SENDER_EMAIL = Deno.env.get('SENDER_EMAIL') || 'suporte@sintektecnologia.com.br'
 
-        const authHeader = req.headers.get('Authorization')
-        if (!authHeader) {
-            throw new Error('Missing Authorization header')
-        }
-
-        // Parse request body
-        const { email, nome, role, celular, funcao, tempPassword }: InviteRequest = await req.json()
-
-        if (!email || !nome || !role || !tempPassword) {
-            throw new Error('Missing required fields: email, nome, role, tempPassword')
-        }
-
+        console.log("[send-user-invite] Initializing Admin Client...")
         const supabaseAdmin = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!, {
             auth: { autoRefreshToken: false, persistSession: false }
         })
 
-        // Step 0: Clean up orphaned profiles
-        const { data: existingProfiles } = await supabaseAdmin
-            .from('profiles')
-            .select('id')
-            .eq('email', email)
+        console.log("[send-user-invite] Parsing JSON Body...")
+        const body = await req.json().catch(e => {
+            console.error("[send-user-invite] JSON Parse Fail:", e.message)
+            return null
+        })
 
-        if (existingProfiles && existingProfiles.length > 0) {
-            for (const profile of existingProfiles) {
-                const { data: userData } = await supabaseAdmin.auth.admin.getUserById(profile.id)
-                if (!userData?.user) {
-                    await supabaseAdmin.from('profiles').delete().eq('id', profile.id)
-                } else {
-                    throw new Error(`Este e-mail já está em uso por outro usuário ativo (${email}).`)
-                }
-            }
-        }
+        if (!body) throw new Error("Requisição inválida: O corpo deve ser um JSON válido.")
+        const { email, nome, role, tempPassword } = body
+        console.log(`[send-user-invite] Creating user: ${email}`)
 
-        // Step 1: Create user in Auth
+        // Step 1: Create Auth User
         const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
             email,
             password: tempPassword,
             email_confirm: true,
-            user_metadata: { nome, role, celular, funcao, is_first_access: true }
+            user_metadata: { nome, role, is_first_access: true }
         })
 
         if (authError) {
-            if (authError.message.includes('already registered')) {
-                throw new Error(`Este e-mail já está em uso no sistema.`)
-            }
-            throw new Error(`Erro no Auth: ${authError.message}`)
+            console.error("[send-user-invite] Auth Error:", authError.message)
+            if (authError.message.includes('already registered')) throw new Error("E-mail já cadastrado.")
+            throw new Error(`Erro Auth: ${authError.message}`)
         }
 
-        // Step 2: Create profile
-        const { error: profileError } = await supabaseAdmin
-            .from('profiles')
-            .upsert({
-                id: authData.user.id,
-                nome,
-                email,
-                celular: celular || '',
-                funcao: funcao || '',
-                role,
-                is_first_access: true,
-                is_blocked: false
-            })
+        // Step 2: Create Profile
+        console.log("[send-user-invite] Upserting Profile...")
+        const { error: profileError } = await supabaseAdmin.from('profiles').upsert({
+            id: authData.user.id,
+            nome,
+            email,
+            role,
+            is_first_access: true
+        })
+        if (profileError) throw new Error(`Erro Perfil: ${profileError.message}`)
 
-        if (profileError) throw new Error(`Erro no perfil: ${profileError.message}`)
-
-        // Step 3: Send welcome email
+        // Step 3: Send Email (Attempt)
+        console.log("[send-user-invite] Attempting Resend...")
         let emailSent = false
-        let emailError = null
-
         try {
-            const emailHTML = `
-            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-              <h1 style="color: #2563eb;">Bem-vindo ao FinTek!</h1>
-              <p>Olá, <strong>${nome}</strong>!</p>
-              <p>Sua conta foi criada. Use os dados abaixo para o primeiro acesso:</p>
-              <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                <p style="margin: 5px 0;"><strong>E-mail:</strong> ${email}</p>
-                <p style="margin: 5px 0;"><strong>Senha Temporária:</strong> ${tempPassword}</p>
-              </div>
-              <p>Por segurança, você deverá trocar esta senha no primeiro login.</p>
-              <a href="${SYSTEM_URL}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 25px; text-decoration: none; border-radius: 6px; font-weight: bold;">Acessar Sistema</a>
-            </div>`
-
-            const resendResponse = await fetch('https://api.resend.com/emails', {
+            const resData = await fetch('https://api.resend.com/emails', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${RESEND_API_KEY}`
-                },
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${RESEND_API_KEY}` },
                 body: JSON.stringify({
                     from: SENDER_EMAIL,
                     to: [email],
-                    subject: '🎉 Bem-vindo ao FinTek - Dados de Acesso',
-                    html: emailHTML
+                    subject: 'Bem-vindo ao FinTek',
+                    html: `Olá ${nome}, sua senha: ${tempPassword}`
                 })
             })
-
-            if (resendResponse.ok) emailSent = true
-            else emailError = await resendResponse.text()
-        } catch (e: any) {
-            emailError = e.message
+            if (resData.ok) emailSent = true
+        } catch (e) {
+            console.error("[send-user-invite] Email Fetch Fail:", e.message)
         }
 
+        console.log("[send-user-invite] SUCCESS")
         return new Response(
-            JSON.stringify({
-                success: true,
-                userId: authData.user.id,
-                emailSent,
-                warning: emailSent ? null : 'Usuário criado, mas o e-mail falhou.',
-                details: emailError
-            }),
+            JSON.stringify({ success: true, userId: authData.user.id, emailSent }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
         )
 
     } catch (error: any) {
-        console.error(`[send-user-invite] Error:`, error.message)
+        console.error(`[send-user-invite] CATCHED: ${error.message}`)
         return new Response(
-            JSON.stringify({ error: error.message, success: false }),
+            JSON.stringify({ success: false, error: error.message, debug_v: "1.3.1" }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
         )
     }

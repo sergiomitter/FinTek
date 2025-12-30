@@ -1,13 +1,6 @@
-// Edge Function: reset-password
-// Purpose: Reset user password to a temporary one and send email.
-
+// Edge Function: reset-password (v1.3.1-DEBUG)
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0'
-
-const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-const SENDER_EMAIL = Deno.env.get('SENDER_EMAIL') || 'suporte@sintektecnologia.com.br'
-const SYSTEM_URL = 'https://fintek-steel.vercel.app'
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -22,17 +15,28 @@ function generateTempPassword(): string {
     return pass;
 }
 
-Deno.serve(async (req) => {
-    if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+console.log("[reset-password] SCRIPT LOADED - v1.3.1-DEBUG")
+
+serve(async (req) => {
+    console.log(`[reset-password] INVOKED: ${req.method} @ ${new Date().toISOString()}`)
+
+    if (req.method === 'OPTIONS') {
+        return new Response('ok', { headers: corsHeaders, status: 200 })
+    }
 
     try {
+        const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
+        const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
+        const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+        const SENDER_EMAIL = Deno.env.get('SENDER_EMAIL') || 'suporte@sintektecnologia.com.br'
+
         const supabaseAdmin = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!, {
             auth: { autoRefreshToken: false, persistSession: false }
         })
 
-        // Parse JSON ONCE
         const body = await req.json()
         const { email, userId, action, newPassword } = body
+        console.log(`[reset-password] Running action: ${action} for ${email || userId}`)
 
         let targetUser = null;
 
@@ -67,22 +71,22 @@ Deno.serve(async (req) => {
         await supabaseAdmin.auth.admin.updateUserById(targetUser.id, { password: tempPassword, user_metadata: { is_first_access: true } })
         const { data: profile } = await supabaseAdmin.from('profiles').update({ is_first_access: true }).eq('id', targetUser.id).select('nome').single()
 
-        const emailHTML = `<div style="font-family: sans-serif; padding: 20px;">
-            <h2>🔐 Nova Senha Temporária</h2>
-            <p>Olá, ${profile?.nome || 'Usuário'}.</p>
-            <p>Sua nova senha é: <strong style="font-size: 20px; color: #2563eb;">${tempPassword}</strong></p>
-            <a href="${SYSTEM_URL}">Acessar Sistema</a>
-        </div>`
-
+        console.log(`[reset-password] Sending email to ${targetUser.email}`)
         await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${RESEND_API_KEY}` },
-            body: JSON.stringify({ from: SENDER_EMAIL, to: [targetUser.email], subject: '🔐 FinTek - Nova Senha', html: emailHTML })
+            body: JSON.stringify({
+                from: SENDER_EMAIL,
+                to: [targetUser.email],
+                subject: '🔐 FinTek - Nova Senha',
+                html: `Olá ${profile?.nome || 'Usuário'}, sua nova senha é: <strong>${tempPassword}</strong>`
+            })
         })
 
-        return new Response(JSON.stringify({ success: true, message: 'Processado com sucesso.' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        return new Response(JSON.stringify({ success: true, message: 'Processado com sucesso.' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 })
 
     } catch (error: any) {
-        return new Response(JSON.stringify({ success: false, error: error.message }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 })
+        console.error(`[reset-password] CATCHED: ${error.message}`)
+        return new Response(JSON.stringify({ success: false, error: error.message, debug_v: "1.3.1" }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 })
     }
 })
