@@ -154,7 +154,13 @@ const Login: React.FC = () => {
       if (updateError) throw updateError;
 
       if (tempUser?.id) {
-        await supabase.from('profiles').update({ is_first_access: false }).eq('id', tempUser.id);
+        await supabase
+          .from('profiles')
+          .update({
+            is_first_access: false,
+            isFirstAccess: false
+          } as any)
+          .eq('id', tempUser.id);
       }
 
       alert('Senha atualizada com sucesso!');
