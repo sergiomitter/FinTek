@@ -58,13 +58,25 @@ serve(async (req) => {
 
         if (action === 'FORGOT_PASSWORD') {
             if (!email) throw new Error('Email is required')
-            const { data: { users }, error: fetchError } = await supabaseAdmin.auth.admin.listUsers()
-            if (fetchError) throw fetchError
-            targetUser = users.find(u => u.email === email)
+            // Better lookup: Use profiles table to find the ID
+            const { data: profile, error: profileError } = await supabaseAdmin
+                .from('profiles')
+                .select('id')
+                .eq('email', email)
+                .single()
+
+            if (profileError || !profile) {
+                console.error('Profile not found for email:', email, profileError)
+                throw new Error('Usuário não encontrado.')
+            }
+
+            const { data: { user }, error: fetchError } = await supabaseAdmin.auth.admin.getUserById(profile.id)
+            if (fetchError || !user) throw new Error('Usuário não encontrado no Auth.')
+            targetUser = user
         } else if (action === 'ADMIN_RESET' || action === 'ADMIN_UPDATE_PASSWORD') {
             if (!userId) throw new Error('User ID is required')
             const { data: { user }, error: fetchError } = await supabaseAdmin.auth.admin.getUserById(userId)
-            if (fetchError) throw fetchError
+            if (fetchError || !user) throw new Error('Usuário não encontrado no Auth.')
             targetUser = user
         }
 
@@ -75,9 +87,9 @@ serve(async (req) => {
         // Update Auth Password
         const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
             targetUser.id,
-            { 
+            {
                 password: tempPassword,
-                user_metadata: { isFirstAccess: true } 
+                user_metadata: { isFirstAccess: true }
             }
         )
 
@@ -90,7 +102,7 @@ serve(async (req) => {
             .eq('id', targetUser.id)
 
         if (action === 'ADMIN_UPDATE_PASSWORD') {
-             return new Response(
+            return new Response(
                 JSON.stringify({ success: true, message: 'Senha alterada com sucesso.' }),
                 { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
             )
@@ -98,7 +110,7 @@ serve(async (req) => {
 
         // Send Email
         const userName = targetUser.user_metadata?.nome || targetUser.email?.split('@')[0] || 'Usuário'
-        
+
         const emailHTML = `
 <!DOCTYPE html>
 <html>

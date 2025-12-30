@@ -73,6 +73,22 @@ const UserReg: React.FC<{ user: User }> = ({ user }) => {
         });
 
         if (rpcError) throw rpcError;
+
+        // If a new password was provided, update it via Edge Function
+        if (formData.password) {
+          const { error: pwdError } = await supabase.functions.invoke('reset-password', {
+            body: {
+              userId: editingUserId,
+              action: 'ADMIN_UPDATE_PASSWORD',
+              newPassword: formData.password
+            }
+          });
+          if (pwdError) {
+            console.error('Erro ao atualizar senha:', pwdError);
+            alert('Atenção: Os dados foram salvos, mas houve um erro ao atualizar a senha no sistema de acesso.');
+          }
+        }
+
         alert('Dados do usuário atualizados com sucesso!');
       } else {
         const tempPass = generateTempPassword();
