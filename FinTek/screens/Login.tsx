@@ -19,7 +19,7 @@ const Login: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [forgotEmail, setForgotEmail] = useState('');
 
-  /* New Effect to clean fields on mount */
+  /* New Effect to clean fields on mount and view change */
   React.useEffect(() => {
     setEmail('');
     setPassword('');
@@ -27,7 +27,7 @@ const Login: React.FC = () => {
     setNewPassword('');
     setConfirmPassword('');
     setError('');
-  }, []);
+  }, [view]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -382,7 +382,7 @@ const Login: React.FC = () => {
 
       {/* Version Tag at Bottom-Left */}
       <div className="absolute bottom-4 left-6 pointer-events-none">
-        <p className="text-text-secondary/40 text-[9px] font-black uppercase tracking-[0.2em]">v1.2.1</p>
+        <p className="text-text-secondary/40 text-[9px] font-black uppercase tracking-[0.2em]">v1.2.5 - REFINADO</p>
       </div>
     </div>
   );
