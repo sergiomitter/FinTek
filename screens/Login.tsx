@@ -23,6 +23,26 @@ const Login: React.FC = () => {
     setEmail('');
     setPassword('');
     setError('');
+
+    // Check if there's already an active session that requires password change
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.user_metadata?.isFirstAccess) {
+        const user: User = {
+          id: session.user.id,
+          nome: session.user.user_metadata?.nome || session.user.email?.split('@')[0] || 'Usuário',
+          email: session.user.email || '',
+          celular: session.user.user_metadata?.celular || '',
+          funcao: session.user.user_metadata?.funcao || '',
+          role: (session.user.user_metadata?.role as UserRole) || 'USER',
+          isFirstAccess: true
+        };
+        setTempUser(user);
+        setView('FIRST_ACCESS');
+      }
+    };
+
+    checkSession();
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {

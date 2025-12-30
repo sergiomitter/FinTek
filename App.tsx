@@ -78,7 +78,7 @@ const App: React.FC = () => {
 
   if (loading) return null;
 
-  if (!currentUser) {
+  if (!currentUser || currentUser.isFirstAccess) {
     return <Login />;
   }
 
