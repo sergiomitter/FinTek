@@ -306,7 +306,7 @@ const Login: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background-dark p-6">
-      <div className="w-full max-w-md bg-surface-dark border border-surface-highlight rounded-3xl p-10 shadow-2xl animate-in fade-in duration-500">
+      <div className="w-full max-w-md bg-surface-dark border-2 border-primary/50 rounded-3xl p-10 shadow-2xl animate-in fade-in duration-500">
         <div className="flex justify-center mb-10">
           <div className="size-20 overflow-hidden rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(59,130,246,0.2)]">
             <img src="/logo.png" alt="FinTek Logo" className="w-full h-full object-cover" />
@@ -382,7 +382,7 @@ const Login: React.FC = () => {
 
       {/* Version Tag at Bottom-Left */}
       <div className="absolute bottom-4 left-6 pointer-events-none">
-        <p className="text-text-secondary/40 text-[9px] font-black uppercase tracking-[0.2em]">v1.2.5 - REFINADO</p>
+        <p className="text-primary text-[10px] font-black uppercase tracking-[0.2em]">v1.2.7 - FORCE REFRESH</p>
       </div>
     </div>
   );
