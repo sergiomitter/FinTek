@@ -288,163 +288,162 @@ const UserReg: React.FC<{ user: User }> = ({ user }) => {
                 />
               </div>
               {user.role === 'MASTER_ADMIN' && editingUserId && (
-                {/* Manual Password Reset Field - Added as requested */ }
-                < div className="space-y-2 md:col-span-2">
-              <label className="text-[10px] font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">
-                Nova Senha Manual (Opcional)
-              </label>
-              <div className="relative">
-                <input
-                  type={showManualPassword ? "text" : "password"}
-                  className="w-full h-12 bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-surface-highlight rounded-xl pl-4 pr-14 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold placeholder:font-normal placeholder:text-slate-400"
-                  placeholder="Digite para alterar a senha (sem enviar e-mail)..."
-                  value={(formData as any).newPassword || ''}
-                  onChange={e => setFormData({ ...formData, newPassword: e.target.value } as any)}
-                />
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-[10px] font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">
+                    Nova Senha Manual (Opcional)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showManualPassword ? "text" : "password"}
+                      className="w-full h-12 bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-surface-highlight rounded-xl pl-4 pr-14 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold placeholder:font-normal placeholder:text-slate-400"
+                      placeholder="Digite para alterar a senha (sem enviar e-mail)..."
+                      value={(formData as any).newPassword || ''}
+                      onChange={e => setFormData({ ...formData, newPassword: e.target.value } as any)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowManualPassword(!showManualPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors flex items-center z-10"
+                    >
+                      {showManualPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                    <p className="text-[10px] text-slate-400 mt-1 ml-1">Deixe em branco para manter a senha atual.</p>
+                  </div>
+                </div>
+              )}
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-[10px] font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">Perfil de Acesso</label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, role: 'MASTER_ADMIN' })}
+                    className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${formData.role === 'MASTER_ADMIN' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 dark:border-surface-highlight text-slate-400'}`}
+                  >
+                    <ShieldCheck className="w-5 h-5 mb-1" />
+                    <span className="text-[9px] font-black uppercase tracking-widest">Master Admin</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, role: 'ADMIN' })}
+                    className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${formData.role === 'ADMIN' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 dark:border-surface-highlight text-slate-400'}`}
+                  >
+                    <Edit3 className="w-5 h-5 mb-1" />
+                    <span className="text-[9px] font-black uppercase tracking-widest">Administrador</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, role: 'USER' })}
+                    className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${formData.role === 'USER' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 dark:border-surface-highlight text-slate-400'}`}
+                  >
+                    <Search className="w-5 h-5 mb-1" />
+                    <span className="text-[9px] font-black uppercase tracking-widest">Usuário</span>
+                  </button>
+                </div>
+              </div>
+              <div className="md:col-span-2 flex justify-end gap-4 pt-4">
                 <button
                   type="button"
-                  onClick={() => setShowManualPassword(!showManualPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors flex items-center z-10"
+                  onClick={closeForm}
+                  className="px-8 h-12 border border-slate-200 dark:border-surface-highlight text-slate-600 dark:text-text-secondary font-black rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all text-xs tracking-widest"
                 >
-                  {showManualPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  CANCELAR
                 </button>
-                <p className="text-[10px] text-slate-400 mt-1 ml-1">Deixe em branco para manter a senha atual.</p>
+                <button
+                  disabled={saving}
+                  className="px-10 h-12 bg-primary text-background-dark font-black rounded-xl shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+                >
+                  {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : editingUserId ? 'SALVAR ALTERAÇÕES' : 'ENVIAR CONVITE'}
+                </button>
               </div>
-          </div>
-              )}
-          <div className="space-y-2 md:col-span-2">
-            <label className="text-[10px] font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">Perfil de Acesso</label>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, role: 'MASTER_ADMIN' })}
-                className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${formData.role === 'MASTER_ADMIN' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 dark:border-surface-highlight text-slate-400'}`}
-              >
-                <ShieldCheck className="w-5 h-5 mb-1" />
-                <span className="text-[9px] font-black uppercase tracking-widest">Master Admin</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, role: 'ADMIN' })}
-                className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${formData.role === 'ADMIN' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 dark:border-surface-highlight text-slate-400'}`}
-              >
-                <Edit3 className="w-5 h-5 mb-1" />
-                <span className="text-[9px] font-black uppercase tracking-widest">Administrador</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, role: 'USER' })}
-                className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${formData.role === 'USER' ? 'border-primary bg-primary/10 text-primary' : 'border-slate-200 dark:border-surface-highlight text-slate-400'}`}
-              >
-                <Search className="w-5 h-5 mb-1" />
-                <span className="text-[9px] font-black uppercase tracking-widest">Usuário</span>
-              </button>
-            </div>
-          </div>
-          <div className="md:col-span-2 flex justify-end gap-4 pt-4">
-            <button
-              type="button"
-              onClick={closeForm}
-              className="px-8 h-12 border border-slate-200 dark:border-surface-highlight text-slate-600 dark:text-text-secondary font-black rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all text-xs tracking-widest"
-            >
-              CANCELAR
-            </button>
-            <button
-              disabled={saving}
-              className="px-10 h-12 bg-primary text-background-dark font-black rounded-xl shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
-            >
-              {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : editingUserId ? 'SALVAR ALTERAÇÕES' : 'ENVIAR CONVITE'}
-            </button>
-          </div>
-        </form>
+            </form>
           </div>
         </div >
       )}
 
-<div className="bg-white dark:bg-surface-dark border border-slate-200 dark:border-surface-highlight rounded-3xl overflow-hidden shadow-sm">
-  <div className="overflow-x-auto">
-    <table className="w-full text-left border-collapse">
-      <thead>
-        <tr className="bg-slate-50 dark:bg-surface-highlight/30 text-[10px] uppercase font-black tracking-widest text-slate-500 dark:text-text-secondary border-b border-slate-200 dark:border-surface-highlight">
-          <th className="px-8 py-6">Nome</th>
-          <th className="px-8 py-6">E-mail / Login</th>
-          <th className="px-8 py-6">Perfil</th>
-          <th className="px-8 py-6">Status Senha</th>
-          {user.role === 'MASTER_ADMIN' && <th className="px-8 py-6 text-center">Ações</th>}
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-slate-100 dark:divide-surface-highlight">
-        {fetching ? (
-          <tr>
-            <td colSpan={5} className="py-20 text-center text-slate-400 font-bold uppercase tracking-widest animate-pulse italic">Sincronizando com Supabase...</td>
-          </tr>
-        ) : users.length === 0 ? (
-          <tr>
-            <td colSpan={5} className="py-20 text-center text-slate-400 font-bold uppercase tracking-widest italic">Nenhum usuário cadastrado em profiles.</td>
-          </tr>
-        ) : users.map(u => (
-          <tr key={u.id} className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors group">
-            <td className="px-8 py-5">
-              <p className="font-black text-slate-900 dark:text-white text-sm">{u.nome}</p>
-              <p className="text-[10px] font-bold text-slate-400 dark:text-text-secondary uppercase tracking-wider">{u.funcao}</p>
-            </td>
-            <td className="px-8 py-5 text-sm font-bold text-slate-600 dark:text-slate-300">{u.email}</td>
-            <td className="px-8 py-5">
-              <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase border ${u.role === 'MASTER_ADMIN' ? 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20' : u.role === 'ADMIN' ? 'bg-primary/10 text-primary border-primary/20' : 'bg-slate-200 dark:bg-surface-highlight text-slate-600 dark:text-text-secondary border-black/5 dark:border-white/5'}`}>
-                {u.role === 'MASTER_ADMIN' ? 'Master Admin' : u.role === 'ADMIN' ? 'Administrador' : 'Usuário'}
-              </span>
-            </td>
-            <td className="px-8 py-5">
-              {u.status === 'BLOCKED' ? (
-                <span className="flex items-center gap-2 text-[10px] font-black text-danger uppercase tracking-widest">
-                  <Lock className="w-3 h-3" /> Bloqueado
-                </span>
-              ) : (
-                <span className="flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-widest">
-                  <ShieldCheck className="w-3 h-3" /> Ativo
-                </span>
-              )}
-            </td>
-            {user.role === 'MASTER_ADMIN' && (
-              <td className="px-8 py-5 text-center">
-                <div className="flex justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => handleEdit(u)}
-                    className="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-500/10 rounded-xl transition-all"
-                    title="Editar Dados"
-                  >
-                    <Edit3 className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleResetPassword(u)}
-                    className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-all"
-                    title="Resetar Senha (via E-mail)"
-                  >
-                    <Key className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleToggleBlock(u)}
-                    className={`p-2 rounded-xl transition-all ${u.status === 'BLOCKED' ? 'text-green-500 hover:bg-green-500/10' : 'text-slate-400 hover:text-danger hover:bg-danger/10'}`}
-                    title={u.status === 'BLOCKED' ? 'Desbloquear' : 'Bloquear'}
-                  >
-                    {u.status === 'BLOCKED' ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-                  </button>
-                  <button
-                    onClick={() => handleDelete(u.id, u.nome, u.role)}
-                    className="p-2 text-slate-400 hover:text-danger hover:bg-danger/10 rounded-xl transition-all"
-                    title="Excluir Perfil"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </td>
-            )}
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-</div>
+      <div className="bg-white dark:bg-surface-dark border border-slate-200 dark:border-surface-highlight rounded-3xl overflow-hidden shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50 dark:bg-surface-highlight/30 text-[10px] uppercase font-black tracking-widest text-slate-500 dark:text-text-secondary border-b border-slate-200 dark:border-surface-highlight">
+                <th className="px-8 py-6">Nome</th>
+                <th className="px-8 py-6">E-mail / Login</th>
+                <th className="px-8 py-6">Perfil</th>
+                <th className="px-8 py-6">Status Senha</th>
+                {user.role === 'MASTER_ADMIN' && <th className="px-8 py-6 text-center">Ações</th>}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-surface-highlight">
+              {fetching ? (
+                <tr>
+                  <td colSpan={5} className="py-20 text-center text-slate-400 font-bold uppercase tracking-widest animate-pulse italic">Sincronizando com Supabase...</td>
+                </tr>
+              ) : users.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-20 text-center text-slate-400 font-bold uppercase tracking-widest italic">Nenhum usuário cadastrado em profiles.</td>
+                </tr>
+              ) : users.map(u => (
+                <tr key={u.id} className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors group">
+                  <td className="px-8 py-5">
+                    <p className="font-black text-slate-900 dark:text-white text-sm">{u.nome}</p>
+                    <p className="text-[10px] font-bold text-slate-400 dark:text-text-secondary uppercase tracking-wider">{u.funcao}</p>
+                  </td>
+                  <td className="px-8 py-5 text-sm font-bold text-slate-600 dark:text-slate-300">{u.email}</td>
+                  <td className="px-8 py-5">
+                    <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase border ${u.role === 'MASTER_ADMIN' ? 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20' : u.role === 'ADMIN' ? 'bg-primary/10 text-primary border-primary/20' : 'bg-slate-200 dark:bg-surface-highlight text-slate-600 dark:text-text-secondary border-black/5 dark:border-white/5'}`}>
+                      {u.role === 'MASTER_ADMIN' ? 'Master Admin' : u.role === 'ADMIN' ? 'Administrador' : 'Usuário'}
+                    </span>
+                  </td>
+                  <td className="px-8 py-5">
+                    {u.status === 'BLOCKED' ? (
+                      <span className="flex items-center gap-2 text-[10px] font-black text-danger uppercase tracking-widest">
+                        <Lock className="w-3 h-3" /> Bloqueado
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-widest">
+                        <ShieldCheck className="w-3 h-3" /> Ativo
+                      </span>
+                    )}
+                  </td>
+                  {user.role === 'MASTER_ADMIN' && (
+                    <td className="px-8 py-5 text-center">
+                      <div className="flex justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => handleEdit(u)}
+                          className="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-500/10 rounded-xl transition-all"
+                          title="Editar Dados"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleResetPassword(u)}
+                          className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-all"
+                          title="Resetar Senha (via E-mail)"
+                        >
+                          <Mail className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleToggleBlock(u)}
+                          className={`p-2 rounded-xl transition-all ${u.status === 'BLOCKED' ? 'text-green-500 hover:bg-green-500/10' : 'text-slate-400 hover:text-danger hover:bg-danger/10'}`}
+                          title={u.status === 'BLOCKED' ? 'Desbloquear' : 'Bloquear'}
+                        >
+                          {u.status === 'BLOCKED' ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                        </button>
+                        <button
+                          onClick={() => handleDelete(u.id, u.nome, u.role)}
+                          className="p-2 text-slate-400 hover:text-danger hover:bg-danger/10 rounded-xl transition-all"
+                          title="Excluir Perfil"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div >
   );
 };

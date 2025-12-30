@@ -429,9 +429,9 @@ const UserReg: React.FC<{ user: User }> = ({ user }) => {
                           <Trash2 className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleResetPassword(u.id, u.nome)}
-                          className="p-2 text-slate-400 hover:text-amber-500 hover:bg-amber-500/10 rounded-xl transition-all"
-                          title="Resetar Senha"
+                          onClick={() => handleResetPassword(u)}
+                          className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-all"
+                          title="Resetar Senha (via E-mail)"
                         >
                           <Mail className="w-4 h-4" />
                         </button>
