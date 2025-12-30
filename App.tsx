@@ -50,10 +50,10 @@ const App: React.FC = () => {
       setLoading(false);
     };
 
-    // Check active session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        fetchUserData(session.user.id, session.user.email!, session.user.user_metadata);
+    // Check active user directly from server to avoid stale session cache
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        fetchUserData(user.id, user.email!, user.user_metadata);
       } else {
         setLoading(false);
       }
