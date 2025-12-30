@@ -37,7 +37,7 @@ const App: React.FC = () => {
         celular: profile?.celular || metadata?.celular || '',
         funcao: profile?.funcao || metadata?.funcao || '',
         role: (profile?.role as UserRole) || (metadata?.role as UserRole) || 'USER',
-        isFirstAccess: metadata?.isFirstAccess || false,
+        isFirstAccess: profile?.is_first_access || metadata?.is_first_access || false,
         status: profile?.is_blocked ? 'BLOCKED' : 'ACTIVE'
       };
 
@@ -83,7 +83,7 @@ const App: React.FC = () => {
 
   if (loading) return null;
 
-  if (!currentUser) {
+  if (!currentUser || currentUser.isFirstAccess) {
     return <Login />;
   }
 

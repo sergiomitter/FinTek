@@ -93,10 +93,13 @@ serve(async (req) => {
             const { newPassword } = await req.json()
             if (!newPassword) throw new Error('New password required.')
 
-            // Update Password
+            // Update Password and Metadata
             const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
                 userId,
-                { password: newPassword }
+                {
+                    password: newPassword,
+                    user_metadata: { is_first_access: true }
+                }
             )
             if (updateError) throw updateError
 
@@ -141,10 +144,13 @@ serve(async (req) => {
 
         const tempPassword = generateTempPassword()
 
-        // 1. Update Password
+        // 1. Update Password and Metadata
         const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
             targetUser.id,
-            { password: tempPassword }
+            {
+                password: tempPassword,
+                user_metadata: { is_first_access: true }
+            }
         )
         if (updateError) throw updateError
 

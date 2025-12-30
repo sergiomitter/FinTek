@@ -155,9 +155,9 @@ const Login: React.FC = () => {
 
     setLoading(true);
     try {
-      // 1. Update Password in Auth
       const { error: updateError } = await supabase.auth.updateUser({
-        password: newPassword
+        password: newPassword,
+        data: { is_first_access: false }
       });
 
       if (updateError) throw updateError;
