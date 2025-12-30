@@ -74,6 +74,11 @@ const App: React.FC = () => {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+    localStorage.clear();
+    sessionStorage.clear();
+    setCurrentUser(null);
+    window.location.href = '/';
+    window.location.reload();
   };
 
   if (loading) return null;

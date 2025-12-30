@@ -295,7 +295,7 @@ const UserReg: React.FC<{ user: User }> = ({ user }) => {
                 <div className="relative">
                   <input
                     type={showManualPassword ? "text" : "password"}
-                    className="w-full h-12 bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-surface-highlight rounded-xl pl-4 pr-12 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold placeholder:font-normal placeholder:text-slate-400"
+                    className="w-full h-12 bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-surface-highlight rounded-xl pl-4 pr-14 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold placeholder:font-normal placeholder:text-slate-400"
                     placeholder="Digite para alterar a senha (sem enviar e-mail)..."
                     value={(formData as any).newPassword || ''}
                     onChange={e => setFormData({ ...formData, newPassword: e.target.value } as any)}
@@ -303,7 +303,7 @@ const UserReg: React.FC<{ user: User }> = ({ user }) => {
                   <button
                     type="button"
                     onClick={() => setShowManualPassword(!showManualPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors flex items-center"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors flex items-center z-10"
                   >
                     {showManualPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>

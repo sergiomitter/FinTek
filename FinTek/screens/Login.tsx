@@ -375,14 +375,12 @@ const Login: React.FC = () => {
           </button>
         </form>
 
-        <div className="mt-8 pt-8 border-t border-surface-highlight/50 text-center">
+        <div className="mt-8 pt-6 border-t border-surface-highlight/50 text-center relative">
           <p className="text-text-secondary text-[10px] font-black uppercase tracking-widest">FinTek &copy; 2023 - Sintek Tecnologia</p>
+          <div className="mt-4">
+            <p className="text-primary text-[10px] font-black uppercase tracking-[0.2em] animate-pulse">v1.2.8 - VERIFIED</p>
+          </div>
         </div>
-      </div>
-
-      {/* Version Tag at Bottom-Left */}
-      <div className="absolute bottom-4 left-6 pointer-events-none">
-        <p className="text-primary text-[10px] font-black uppercase tracking-[0.2em]">v1.2.7 - FORCE REFRESH</p>
       </div>
     </div>
   );
