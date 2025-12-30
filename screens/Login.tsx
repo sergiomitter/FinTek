@@ -114,11 +114,12 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
-        redirectTo: window.location.origin + '/#/reset-password',
+      const { data, error: resetError } = await supabase.functions.invoke('reset-password', {
+        body: { email: forgotEmail, action: 'FORGOT_PASSWORD' },
       });
 
       if (resetError) throw resetError;
+      if (!data?.success) throw new Error(data?.error || 'Erro ao processar solicitação.');
 
       alert('RECUPERAÇÃO DE SENHA\n\nUm e-mail de recuperação foi enviado para ' + forgotEmail + '. Siga as instruções no e-mail.');
       setView('LOGIN');
