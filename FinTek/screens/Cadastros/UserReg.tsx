@@ -5,7 +5,7 @@ import { User, UserRole } from '../../types';
 import { generateTempPassword, formatPhone } from '../../utils/helpers';
 import { createClient } from '@supabase/supabase-js';
 import { supabase, supabaseUrl, supabaseAnonKey } from '../../lib/supabase';
-import { UserPlus, Edit3, Trash2, ShieldCheck, Lock, Unlock, Mail, Loader2, X, Search } from 'lucide-react';
+import { UserPlus, Edit3, Trash2, ShieldCheck, Lock, Unlock, Mail, Loader2, X, Search, Eye, EyeOff } from 'lucide-react';
 
 const UserReg: React.FC<{ user: User }> = ({ user }) => {
   const [loading, setLoading] = useState(false);
@@ -21,6 +21,7 @@ const UserReg: React.FC<{ user: User }> = ({ user }) => {
     funcao: '',
     role: 'USER'
   });
+  const [showManualPassword, setShowManualPassword] = useState(false);
 
   const SENDER_EMAIL = 'suporte@sintektecnologia.com.br';
   const SYSTEM_LINK = window.location.origin;
@@ -293,12 +294,19 @@ const UserReg: React.FC<{ user: User }> = ({ user }) => {
                 </label>
                 <div className="relative">
                   <input
-                    type="text"
-                    className="w-full h-12 bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-surface-highlight rounded-xl px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold placeholder:font-normal placeholder:text-slate-400"
+                    type={showManualPassword ? "text" : "password"}
+                    className="w-full h-12 bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-surface-highlight rounded-xl pl-4 pr-12 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold placeholder:font-normal placeholder:text-slate-400"
                     placeholder="Digite para alterar a senha (sem enviar e-mail)..."
                     value={(formData as any).newPassword || ''}
                     onChange={e => setFormData({ ...formData, newPassword: e.target.value } as any)}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowManualPassword(!showManualPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors flex items-center"
+                  >
+                    {showManualPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
                   <p className="text-[10px] text-slate-400 mt-1 ml-1">Deixe em branco para manter a senha atual.</p>
                 </div>
               </div>

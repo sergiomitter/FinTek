@@ -23,6 +23,9 @@ const Login: React.FC = () => {
   React.useEffect(() => {
     setEmail('');
     setPassword('');
+    setForgotEmail('');
+    setNewPassword('');
+    setConfirmPassword('');
     setError('');
   }, []);
 
@@ -270,6 +273,7 @@ const Login: React.FC = () => {
                 type="email"
                 required
                 autoFocus
+                autoComplete="off"
                 disabled={loading}
                 className="w-full h-14 bg-background-dark border border-surface-highlight rounded-2xl px-5 text-white focus:ring-2 focus:ring-primary font-bold transition-all disabled:opacity-50"
                 placeholder="ex: voce@empresa.com.br"
@@ -319,6 +323,7 @@ const Login: React.FC = () => {
             <input
               type="email"
               required
+              autoComplete="off"
               disabled={loading}
               className="w-full h-14 bg-background-dark border border-surface-highlight rounded-2xl px-5 text-white focus:ring-2 focus:ring-primary font-bold transition-all disabled:opacity-50"
               placeholder="seu@email.com"
@@ -332,6 +337,7 @@ const Login: React.FC = () => {
               <input
                 type={showPassword ? "text" : "password"}
                 required
+                autoComplete="new-password"
                 disabled={loading}
                 className="w-full h-14 bg-background-dark border border-surface-highlight rounded-2xl pl-5 pr-14 text-white focus:ring-2 focus:ring-primary font-bold transition-all disabled:opacity-50"
                 value={password}
@@ -370,8 +376,13 @@ const Login: React.FC = () => {
         </form>
 
         <div className="mt-8 pt-8 border-t border-surface-highlight/50 text-center">
-          <p className="text-text-secondary text-[10px] font-black uppercase tracking-widest">FinTek &copy; 2023 - Sintek Tecnologia (v1.2) - Atualizado</p>
+          <p className="text-text-secondary text-[10px] font-black uppercase tracking-widest">FinTek &copy; 2023 - Sintek Tecnologia</p>
         </div>
+      </div>
+
+      {/* Version Tag at Bottom-Left */}
+      <div className="absolute bottom-4 left-6 pointer-events-none">
+        <p className="text-text-secondary/40 text-[9px] font-black uppercase tracking-[0.2em]">v1.2.1</p>
       </div>
     </div>
   );
