@@ -37,7 +37,11 @@ const Login: React.FC = () => {
           .eq('id', session.user.id)
           .single();
 
-        if (profile?.is_first_access || session.user.user_metadata?.is_first_access) {
+        const isFirst = profile?.is_first_access ||
+          session.user.user_metadata?.is_first_access ||
+          session.user.user_metadata?.isFirstAccess;
+
+        if (isFirst) {
           const user: User = {
             id: session.user.id,
             nome: profile?.nome || session.user.user_metadata?.nome || 'Usuário',
@@ -80,7 +84,11 @@ const Login: React.FC = () => {
       if (authError) throw authError;
 
       // 3. Check for enforced change
-      if (profile?.is_first_access || data.user?.user_metadata?.is_first_access) {
+      const isFirst = profile?.is_first_access ||
+        data.user?.user_metadata?.is_first_access ||
+        data.user?.user_metadata?.isFirstAccess;
+
+      if (isFirst) {
         const user: User = {
           id: data.user.id,
           nome: profile?.nome || data.user.user_metadata?.nome || 'Usuário',
@@ -137,10 +145,13 @@ const Login: React.FC = () => {
 
     setLoading(true);
     try {
-      // 1. Update Auth
+      // 1. Update Auth - Clear BOTH naming conventions
       const { error: updateError } = await supabase.auth.updateUser({
         password: newPassword,
-        data: { is_first_access: false }
+        data: {
+          is_first_access: false,
+          isFirstAccess: false
+        }
       });
       if (updateError) throw updateError;
 

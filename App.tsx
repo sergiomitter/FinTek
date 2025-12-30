@@ -37,7 +37,7 @@ const App: React.FC = () => {
         celular: profile?.celular || metadata?.celular || '',
         funcao: profile?.funcao || metadata?.funcao || '',
         role: (profile?.role as UserRole) || (metadata?.role as UserRole) || 'USER',
-        isFirstAccess: profile?.is_first_access || metadata?.is_first_access || false,
+        isFirstAccess: profile?.is_first_access || metadata?.is_first_access || metadata?.isFirstAccess || false,
         status: profile?.is_blocked ? 'BLOCKED' : 'ACTIVE'
       };
 
