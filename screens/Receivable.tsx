@@ -183,7 +183,7 @@ const Receivable: React.FC<{ user: User }> = ({ user }) => {
   };
 
   return (
-    <div className="p-6 lg:p-10 space-y-10 max-w-7xl mx-auto">
+    <div className="p-6 lg:p-10 space-y-10 w-full">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="flex flex-col gap-1">
           <h1 className="text-slate-900 dark:text-white text-4xl font-black tracking-tight">Contas a Receber</h1>
