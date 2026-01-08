@@ -214,8 +214,105 @@ const Investimentos: React.FC<{ user: User }> = ({ user }) => {
         ))}
       </div>
 
+      <div className="bg-surface-dark rounded-2xl border border-surface-highlight overflow-hidden shadow-2xl">
+        <div className="p-6 bg-[#152019] border-b border-surface-highlight">
+          <h3 className="text-lg font-bold text-white uppercase tracking-tight">Carteira de Ativos</h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-surface-highlight/30 text-[10px] uppercase font-black text-[#9db9a6] tracking-widest">
+              <tr>
+                <th className="px-8 py-5">Empresa</th>
+                <th className="px-8 py-5">Instituição</th>
+                <th className="px-8 py-5">Ativo/Descrição</th>
+                <th className="px-8 py-5 text-right">Investido</th>
+                <th className="px-8 py-5 text-right">Atual</th>
+                <th className="px-8 py-5 text-center">Rend.</th>
+                <th className="px-8 py-5 text-center">Ações</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-surface-highlight">
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="px-8 py-10 text-center">
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+                  </td>
+                </tr>
+              ) : investments.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-8 py-10 text-center text-[#9db9a6]">Nenhum investimento cadastrado.</td>
+                </tr>
+              ) : (
+                investments.map((inv) => {
+                  const profit = inv.current_value - inv.amount;
+                  const profitPct = inv.amount > 0 ? ((profit / inv.amount) * 100).toFixed(1) : '0.0';
+                  return (
+                    <tr key={inv.id} className="hover:bg-surface-highlight/10 transition-colors">
+                      <td className="px-8 py-5 font-bold text-white text-sm">{inv.company?.name || '-'}</td>
+                      <td className="px-8 py-5">
+                        <div className="flex flex-col">
+                          <span className="font-bold text-white text-sm">{inv.bank?.name || '-'}</span>
+                          <span className="text-[10px] text-[#9db9a6] font-bold uppercase">Ag: {inv.bank?.agency} Ct: {inv.bank?.account_number}</span>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5 text-[#9db9a6] text-xs font-bold uppercase">{inv.description}</td>
+                      <td className="px-8 py-5 text-right text-[#9db9a6] text-sm">
+                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(inv.amount)}
+                      </td>
+                      <td className="px-8 py-5 text-right text-white font-black text-sm">
+                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(inv.current_value)}
+                      </td>
+                      <td className="px-8 py-5 text-center">
+                        <span className={`px-2 py-1 rounded-md text-[10px] font-black ${parseFloat(profitPct) >= 0 ? 'bg-primary/10 text-primary' : 'bg-danger/10 text-danger'}`}>
+                          {parseFloat(profitPct) >= 0 ? '+' : ''}{profitPct}%
+                        </span>
+                      </td>
+                      <td className="px-8 py-5">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => {
+                              openEdit(inv, true);
+                              window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                            }}
+                            className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
+                            title="Visualizar"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          {(user.role === 'MASTER_ADMIN' || user.role === 'ADMIN') && (
+                            <>
+                              <button
+                                onClick={() => {
+                                  openEdit(inv);
+                                  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                                }}
+                                className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
+                                title="Editar"
+                              >
+                                <Edit3 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(inv.id, inv.description)}
+                                className="p-2 text-slate-400 hover:text-danger hover:bg-danger/10 rounded-lg transition-all"
+                                title="Excluir"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       {showForm && (user.role === 'MASTER_ADMIN' || user.role === 'ADMIN') && (
-        <div className="bg-surface-dark border border-surface-highlight rounded-2xl p-8 animate-in slide-in-from-top duration-300 shadow-xl">
+        <div className="bg-surface-dark border border-surface-highlight rounded-2xl p-8 animate-in slide-in-from-bottom-4 duration-300 shadow-xl">
           <div className="flex items-center gap-3 mb-8 border-b border-surface-highlight pb-6">
             <Plus className="text-primary w-8 h-8" />
             <h3 className="text-xl font-black text-white uppercase tracking-tight">
@@ -341,103 +438,6 @@ const Investimentos: React.FC<{ user: User }> = ({ user }) => {
           </form>
         </div>
       )}
-
-      <div className="bg-surface-dark rounded-2xl border border-surface-highlight overflow-hidden shadow-2xl">
-        <div className="p-6 bg-[#152019] border-b border-surface-highlight">
-          <h3 className="text-lg font-bold text-white uppercase tracking-tight">Carteira de Ativos</h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-surface-highlight/30 text-[10px] uppercase font-black text-[#9db9a6] tracking-widest">
-              <tr>
-                <th className="px-8 py-5">Empresa</th>
-                <th className="px-8 py-5">Instituição</th>
-                <th className="px-8 py-5">Ativo/Descrição</th>
-                <th className="px-8 py-5 text-right">Investido</th>
-                <th className="px-8 py-5 text-right">Atual</th>
-                <th className="px-8 py-5 text-center">Rend.</th>
-                <th className="px-8 py-5 text-center">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-surface-highlight">
-              {loading ? (
-                <tr>
-                  <td colSpan={7} className="px-8 py-10 text-center">
-                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
-                  </td>
-                </tr>
-              ) : investments.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-8 py-10 text-center text-[#9db9a6]">Nenhum investimento cadastrado.</td>
-                </tr>
-              ) : (
-                investments.map((inv) => {
-                  const profit = inv.current_value - inv.amount;
-                  const profitPct = inv.amount > 0 ? ((profit / inv.amount) * 100).toFixed(1) : '0.0';
-                  return (
-                    <tr key={inv.id} className="hover:bg-surface-highlight/10 transition-colors">
-                      <td className="px-8 py-5 font-bold text-white text-sm">{inv.company?.name || '-'}</td>
-                      <td className="px-8 py-5">
-                        <div className="flex flex-col">
-                          <span className="font-bold text-white text-sm">{inv.bank?.name || '-'}</span>
-                          <span className="text-[10px] text-[#9db9a6] font-bold uppercase">Ag: {inv.bank?.agency} Ct: {inv.bank?.account_number}</span>
-                        </div>
-                      </td>
-                      <td className="px-8 py-5 text-[#9db9a6] text-xs font-bold uppercase">{inv.description}</td>
-                      <td className="px-8 py-5 text-right text-[#9db9a6] text-sm">
-                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(inv.amount)}
-                      </td>
-                      <td className="px-8 py-5 text-right text-white font-black text-sm">
-                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(inv.current_value)}
-                      </td>
-                      <td className="px-8 py-5 text-center">
-                        <span className={`px-2 py-1 rounded-md text-[10px] font-black ${parseFloat(profitPct) >= 0 ? 'bg-primary/10 text-primary' : 'bg-danger/10 text-danger'}`}>
-                          {parseFloat(profitPct) >= 0 ? '+' : ''}{profitPct}%
-                        </span>
-                      </td>
-                      <td className="px-8 py-5">
-                        <div className="flex items-center justify-center gap-2">
-                          <button
-                            onClick={() => {
-                              openEdit(inv, true);
-                              window.scrollTo({ top: 0, behavior: 'smooth' });
-                            }}
-                            className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
-                            title="Visualizar"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          {(user.role === 'MASTER_ADMIN' || user.role === 'ADMIN') && (
-                            <>
-                              <button
-                                onClick={() => {
-                                  openEdit(inv);
-                                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                                }}
-                                className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
-                                title="Editar"
-                              >
-                                <Edit3 className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => handleDelete(inv.id, inv.description)}
-                                className="p-2 text-slate-400 hover:text-danger hover:bg-danger/10 rounded-lg transition-all"
-                                title="Excluir"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
 
     </div>
   );
