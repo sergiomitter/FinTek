@@ -75,29 +75,10 @@ serve(async (req) => {
 
         console.log(`[send-user-invite] User created in Auth with ID: ${authData.user.id}`)
 
-        // Step 2: Create profile in profiles table
-        console.log(`[send-user-invite] Creating profile...`)
-        const { error: profileError } = await supabaseAdmin
-            .from('profiles')
-            .insert({
-                id: authData.user.id,
-                nome,
-                email,
-                celular: celular || '',
-                funcao: funcao || '',
-                role,
-                is_first_access: true,
-                is_blocked: false
-            })
-
-        if (profileError) {
-            console.error(`[send-user-invite] Profile error:`, profileError)
-            // If profile creation fails, delete the auth user to maintain consistency
-            await supabaseAdmin.auth.admin.deleteUser(authData.user.id)
-            throw new Error(`Failed to create profile: ${profileError.message}`)
-        }
-
-        console.log(`[send-user-invite] Profile created successfully`)
+        // Step 2: Skip manual profile creation because the database trigger 'on_auth_user_created' 
+        // already handles this automatically upon auth.users insertion.
+        
+        console.log(`[send-user-invite] Profile creation will be handled by DB Trigger`)
 
         // Step 3: Send welcome email via Resend
         let emailSent = false

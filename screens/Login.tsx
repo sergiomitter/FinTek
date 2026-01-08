@@ -37,9 +37,9 @@ const Login: React.FC = () => {
           .eq('id', authUser.id)
           .single();
 
-        const isFirst = profile?.is_first_access ||
-          authUser.user_metadata?.is_first_access ||
-          authUser.user_metadata?.isFirstAccess;
+        const isFirst = profile?.is_first_access === true ||
+          authUser.user_metadata?.is_first_access === true ||
+          authUser.user_metadata?.isFirstAccess === true;
 
         if (isFirst) {
           const user: User = {
@@ -157,13 +157,19 @@ const Login: React.FC = () => {
 
       // 2. Update Profile - Clear all variations
       if (tempUser?.id) {
-        await supabase
+        const { error: profileError } = await supabase
           .from('profiles')
           .update({
             is_first_access: false,
             isFirstAccess: false
           } as any)
           .eq('id', tempUser.id);
+
+        if (profileError) {
+          console.error('Error updating profile:', profileError);
+          // If profile fails, we don't reload yet to allow user to see the error or retry
+          throw new Error('Senha alterada no Auth, mas houve um erro ao atualizar seu perfil. Por favor, tente novamente ou contate o suporte.');
+        }
       }
 
       alert('Senha atualizada com sucesso!');
