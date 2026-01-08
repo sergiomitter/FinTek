@@ -8,7 +8,7 @@ import Dashboard from './screens/Dashboard';
 import Schedule from './screens/Schedule';
 import Payable from './screens/Payable';
 import Receivable from './screens/Receivable';
-import Investments from './screens/Investments';
+import Investments from './screens/Investimentos';
 import CompanyReg from './screens/Cadastros/CompanyReg';
 import PeopleReg from './screens/Cadastros/PeopleReg';
 import BankReg from './screens/Cadastros/BankReg';
