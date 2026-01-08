@@ -155,19 +155,17 @@ const Login: React.FC = () => {
       });
       if (updateError) throw updateError;
 
-      // 2. Update Profile - Clear all variations
+      // 2. Update Profile - Use only existing columns (is_first_access)
       if (tempUser?.id) {
         const { error: profileError } = await supabase
           .from('profiles')
           .update({
-            is_first_access: false,
-            isFirstAccess: false
-          } as any)
+            is_first_access: false
+          })
           .eq('id', tempUser.id);
 
         if (profileError) {
           console.error('Error updating profile:', profileError);
-          // If profile fails, we don't reload yet to allow user to see the error or retry
           throw new Error('Senha alterada no Auth, mas houve um erro ao atualizar seu perfil. Por favor, tente novamente ou contate o suporte.');
         }
       }
