@@ -91,31 +91,64 @@ export type Database = {
             }
             companies: {
                 Row: {
-                    city: string | null
-                    cnpj: string | null
+                    cnpj: string
                     created_at: string | null
+                    email: string | null
                     id: string
                     is_active: boolean | null
                     name: string
-                    state: string | null
+                    razao_social: string | null
                 }
                 Insert: {
-                    city?: string | null
-                    cnpj?: string | null
+                    cnpj: string
                     created_at?: string | null
+                    email?: string | null
                     id?: string
                     is_active?: boolean | null
                     name: string
-                    state?: string | null
+                    razao_social?: string | null
                 }
                 Update: {
-                    city?: string | null
-                    cnpj?: string | null
+                    cnpj?: string
                     created_at?: string | null
+                    email?: string | null
                     id?: string
                     is_active?: boolean | null
                     name?: string
-                    state?: string | null
+                    razao_social?: string | null
+                }
+                Relationships: []
+            }
+            customers: {
+                Row: {
+                    cnpj_cpf: string
+                    created_at: string | null
+                    email: string | null
+                    id: string
+                    is_active: boolean | null
+                    name: string
+                    phone: string | null
+                    trade_name: string | null
+                }
+                Insert: {
+                    cnpj_cpf: string
+                    created_at?: string | null
+                    email?: string | null
+                    id?: string
+                    is_active?: boolean | null
+                    name: string
+                    phone?: string | null
+                    trade_name?: string | null
+                }
+                Update: {
+                    cnpj_cpf?: string
+                    created_at?: string | null
+                    email?: string | null
+                    id?: string
+                    is_active?: boolean | null
+                    name?: string
+                    phone?: string | null
+                    trade_name?: string | null
                 }
                 Relationships: []
             }
@@ -133,11 +166,11 @@ export type Database = {
                     type: string | null
                 }
                 Insert: {
-                    amount: number
+                    amount?: number
                     bank_id?: string | null
                     company_id?: string | null
                     created_at?: string | null
-                    current_value: number
+                    current_value?: number
                     description?: string | null
                     id?: string
                     is_active?: boolean | null
@@ -180,54 +213,215 @@ export type Database = {
                     }
                 ]
             }
+            payables: {
+                Row: {
+                    amount: number
+                    bank_id: string
+                    company_id: string
+                    created_at: string | null
+                    description: string
+                    due_date: string
+                    id: string
+                    status: string
+                    supplier_id: string
+                }
+                Insert: {
+                    amount: number
+                    bank_id: string
+                    company_id: string
+                    created_at?: string | null
+                    description: string
+                    due_date: string
+                    id?: string
+                    status?: string
+                    supplier_id: string
+                }
+                Update: {
+                    amount?: number
+                    bank_id?: string
+                    company_id?: string
+                    created_at?: string | null
+                    description?: string
+                    due_date?: string
+                    id?: string
+                    status?: string
+                    supplier_id?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "payables_bank_id_fkey"
+                        columns: ["bank_id"]
+                        isOneToOne: false
+                        referencedRelation: "banks"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "payables_company_id_fkey"
+                        columns: ["company_id"]
+                        isOneToOne: false
+                        referencedRelation: "companies"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "payables_supplier_id_fkey"
+                        columns: ["supplier_id"]
+                        isOneToOne: false
+                        referencedRelation: "suppliers"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
             people: {
                 Row: {
-                    city: string | null
                     cpf: string | null
                     created_at: string | null
                     id: string
                     is_active: boolean | null
                     name: string
                     nickname: string | null
-                    phone: string | null
-                    state: string | null
                 }
                 Insert: {
-                    city?: string | null
                     cpf?: string | null
                     created_at?: string | null
                     id?: string
                     is_active?: boolean | null
                     name: string
                     nickname?: string | null
-                    phone?: string | null
-                    state?: string | null
                 }
                 Update: {
-                    city?: string | null
                     cpf?: string | null
                     created_at?: string | null
                     id?: string
                     is_active?: boolean | null
                     name?: string
                     nickname?: string | null
-                    phone?: string | null
-                    state?: string | null
                 }
                 Relationships: []
             }
-        }
-        Views: {
-            [_ in never]: never
-        }
-        Functions: {
-            [_ in never]: never
-        }
-        Enums: {
-            [_ in never]: never
-        }
-        CompositeTypes: {
-            [_ in never]: never
+            profiles: {
+                Row: {
+                    celular: string | null
+                    created_at: string | null
+                    funcao: string | null
+                    id: string
+                    is_blocked: boolean | null
+                    is_first_access: boolean | null
+                    nome: string
+                    role: string | null
+                }
+                Insert: {
+                    celular?: string | null
+                    created_at?: string | null
+                    funcao?: string | null
+                    id: string
+                    is_blocked?: boolean | null
+                    is_first_access?: boolean | null
+                    nome: string
+                    role?: string | null
+                }
+                Update: {
+                    celular?: string | null
+                    created_at?: string | null
+                    funcao?: string | null
+                    id?: string
+                    is_blocked?: boolean | null
+                    is_first_access?: boolean | null
+                    nome?: string
+                    role?: string | null
+                }
+                Relationships: []
+            }
+            receivables: {
+                Row: {
+                    amount: number
+                    bank_id: string
+                    company_id: string
+                    created_at: string | null
+                    customer_id: string
+                    description: string
+                    due_date: string
+                    id: string
+                    status: string
+                }
+                Insert: {
+                    amount: number
+                    bank_id: string
+                    company_id: string
+                    created_at?: string | null
+                    customer_id: string
+                    description: string
+                    due_date: string
+                    id?: string
+                    status?: string
+                }
+                Update: {
+                    amount?: number
+                    bank_id?: string
+                    company_id?: string
+                    created_at?: string | null
+                    customer_id?: string
+                    description?: string
+                    due_date?: string
+                    id?: string
+                    status?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "receivables_bank_id_fkey"
+                        columns: ["bank_id"]
+                        isOneToOne: false
+                        referencedRelation: "banks"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "receivables_company_id_fkey"
+                        columns: ["company_id"]
+                        isOneToOne: false
+                        referencedRelation: "companies"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "receivables_customer_id_fkey"
+                        columns: ["customer_id"]
+                        isOneToOne: false
+                        referencedRelation: "customers"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
+            suppliers: {
+                Row: {
+                    cnpj_cpf: string
+                    created_at: string | null
+                    email: string | null
+                    id: string
+                    is_active: boolean | null
+                    name: string
+                    phone: string | null
+                    trade_name: string | null
+                }
+                Insert: {
+                    cnpj_cpf: string
+                    created_at?: string | null
+                    email?: string | null
+                    id?: string
+                    is_active?: boolean | null
+                    name: string
+                    phone?: string | null
+                    trade_name?: string | null
+                }
+                Update: {
+                    cnpj_cpf?: string
+                    created_at?: string | null
+                    email?: string | null
+                    id?: string
+                    is_active?: boolean | null
+                    name?: string
+                    phone?: string | null
+                    trade_name?: string | null
+                }
+                Relationships: []
+            }
         }
     }
 }
