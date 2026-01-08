@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { User } from '../../types';
-import { formatDocument } from '../../utils/helpers';
+import { formatDocument, validateCPF, validateCNPJ } from '../../utils/helpers';
 import {
   Plus,
   Search,
@@ -34,8 +34,11 @@ const BankReg: React.FC<{ user: User }> = ({ user }) => {
     agency: '',
     account_number: '',
     owner_document: '',
-    owner_name: ''
+    owner_name: '',
+    company_id: '' as string | null
   });
+
+  const [docError, setDocError] = useState('');
 
   useEffect(() => {
     fetchBanks();
@@ -80,7 +83,8 @@ const BankReg: React.FC<{ user: User }> = ({ user }) => {
     } else {
       setShowForm(false);
       setEditingId(null);
-      setFormData({ name: '', account_type: 'BANK', agency: '', account_number: '', owner_document: '', owner_name: '' });
+      setFormData({ name: '', account_type: 'BANK', agency: '', account_number: '', owner_document: '', owner_name: '', company_id: null });
+      setDocError('');
       fetchBanks();
     }
     setSaving(false);
@@ -116,10 +120,15 @@ const BankReg: React.FC<{ user: User }> = ({ user }) => {
 
   const handleOwnerDocChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = formatDocument(e.target.value);
-    setFormData(prev => ({ ...prev, owner_document: value }));
+    setFormData(prev => ({ ...prev, owner_document: value, company_id: null }));
+    setDocError('');
 
     const clean = value.replace(/\D/g, '');
     if (clean.length === 11) {
+      if (!validateCPF(clean)) {
+        setDocError('CPF Inválido');
+        return;
+      }
       // Look for Person
       const { data } = await supabase
         .from('people')
@@ -128,13 +137,17 @@ const BankReg: React.FC<{ user: User }> = ({ user }) => {
         .maybeSingle();
       if (data) setFormData(prev => ({ ...prev, owner_name: data.name }));
     } else if (clean.length === 14) {
+      if (!validateCNPJ(clean)) {
+        setDocError('CNPJ Inválido');
+        return;
+      }
       // Look for Company
       const { data } = await supabase
         .from('companies')
-        .select('razao_social')
+        .select('id, razao_social')
         .eq('cnpj', value)
         .maybeSingle();
-      if (data) setFormData(prev => ({ ...prev, owner_name: data.razao_social }));
+      if (data) setFormData(prev => ({ ...prev, owner_name: data.razao_social, company_id: data.id }));
     }
   };
 
@@ -146,7 +159,8 @@ const BankReg: React.FC<{ user: User }> = ({ user }) => {
       agency: bank.agency || '',
       account_number: bank.account_number || '',
       owner_document: bank.owner_document || '',
-      owner_name: bank.owner_name || ''
+      owner_name: bank.owner_name || '',
+      company_id: bank.company_id || null
     });
     setShowForm(true);
   };
@@ -183,7 +197,8 @@ const BankReg: React.FC<{ user: User }> = ({ user }) => {
           <button
             onClick={() => {
               setEditingId(null);
-              setFormData({ name: '', account_type: 'BANK', agency: '', account_number: '', owner_document: '', owner_name: '' });
+              setFormData({ name: '', account_type: 'BANK', agency: '', account_number: '', owner_document: '', owner_name: '', company_id: null });
+              setDocError('');
               setShowForm(true);
             }}
             className="px-8 h-12 rounded-xl bg-primary text-background-dark font-black shadow-lg shadow-primary/20 flex items-center gap-2 hover:scale-[1.02] transition-all"
@@ -239,12 +254,11 @@ const BankReg: React.FC<{ user: User }> = ({ user }) => {
                         <span className="font-bold text-slate-900 dark:text-white capitalize text-sm">{b.name}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-5 border-l border-slate-100 dark:border-surface-highlight/10">
-                      <div className="flex flex-col">
-                        <span className="font-bold text-slate-900 dark:text-white capitalize text-sm">{b.owner_name || '-'}</span>
-                        <span className="text-[10px] text-slate-400 font-medium tracking-wider">{b.owner_document || '-'}</span>
-                      </div>
-                    </td>
+                    <div className="flex flex-col">
+                      <span className="font-bold text-slate-900 dark:text-white capitalize text-sm">{b.owner_name || '-'}</span>
+                      <span className="text-[10px] text-slate-400 font-medium tracking-wider">{b.owner_document || '-'}</span>
+                      {b.company_id && <span className="text-[9px] text-primary font-bold uppercase tracking-tighter">Vinculada à Empresa</span>}
+                    </div>
                     <td className="px-6 py-5">
                       <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest ${b.account_type === 'EXCHANGE' ? 'bg-warning/10 text-warning' : b.account_type === 'BROKER' ? 'bg-primary/10 text-primary' : 'bg-slate-400/10 text-slate-400'}`}>
                         {getTypeText(b.account_type)}
@@ -312,9 +326,10 @@ const BankReg: React.FC<{ user: User }> = ({ user }) => {
                     required
                     value={formData.owner_document}
                     onChange={handleOwnerDocChange}
-                    className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold transition-all"
+                    className={`h-12 w-full rounded-xl border ${docError ? 'border-danger' : 'border-slate-200 dark:border-surface-highlight'} bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold transition-all`}
                     placeholder="000.000.000-00 ou 00.000.000/0000-00"
                   />
+                  {docError && <p className="text-[10px] text-danger font-black uppercase tracking-wider">{docError}</p>}
                 </div>
                 <div className="md:col-span-1 space-y-2">
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Nome do Titular</label>

@@ -11,7 +11,9 @@ import {
   TrendingUp,
   DollarSign,
   Percent,
-  Wallet
+  Wallet,
+  Eye,
+  Check
 } from 'lucide-react';
 
 interface Investment {
@@ -35,6 +37,7 @@ const Investimentos: React.FC<{ user: User }> = ({ user }) => {
   const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [isViewOnly, setIsViewOnly] = useState(false);
 
   const [formData, setFormData] = useState({
     company_id: '',
@@ -133,8 +136,9 @@ const Investimentos: React.FC<{ user: User }> = ({ user }) => {
     }
   };
 
-  const openEdit = (investment: Investment) => {
+  const openEdit = (investment: Investment, viewOnly: boolean = false) => {
     setEditingId(investment.id);
+    setIsViewOnly(viewOnly);
     setFormData({
       company_id: investment.company_id || '',
       bank_id: investment.bank_id || '',
@@ -161,24 +165,126 @@ const Investimentos: React.FC<{ user: User }> = ({ user }) => {
 
   return (
     <div className="p-6 lg:p-10 space-y-10 max-w-7xl mx-auto">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-6 border-b border-surface-highlight">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6 border-b border-surface-highlight">
         <div className="flex flex-col gap-2">
           <h1 className="text-4xl font-black text-white tracking-tight">Carteira de Investimentos</h1>
           <p className="text-[#9db9a6] text-base font-normal">Acompanhe a rentabilidade e evolução do seu patrimônio.</p>
         </div>
-        {user.role === 'MASTER_ADMIN' && (
+        {(user.role === 'MASTER_ADMIN' || user.role === 'ADMIN') && (
           <button
             onClick={() => {
-              setEditingId(null);
-              setFormData({ company_id: '', bank_id: '', description: '', amount: '', current_value: '' });
-              setShowForm(true);
+              if (showForm && !editingId) setShowForm(false);
+              else {
+                setEditingId(null);
+                setIsViewOnly(false);
+                setFormData({ company_id: '', bank_id: '', description: '', amount: '', current_value: '' });
+                setShowForm(true);
+              }
             }}
-            className="px-8 h-12 rounded-xl bg-primary text-background-dark font-black shadow-lg shadow-primary/20 flex items-center gap-2 hover:scale-[1.02] transition-all"
+            className={`flex items-center gap-2 px-8 h-12 rounded-xl transition-all font-black text-sm shadow-lg ${showForm && !editingId ? 'bg-slate-200 text-slate-900' : 'bg-primary text-background-dark shadow-primary/20 hover:scale-[1.02]'}`}
           >
-            <Plus className="w-5 h-5" /> Novo Aporte
+            {showForm && !editingId ? <><X className="w-5 h-5" /> CANCELAR</> : <><Plus className="w-5 h-5" /> NOVO APORTE</>}
           </button>
         )}
       </div>
+
+      {showForm && (user.role === 'MASTER_ADMIN' || user.role === 'ADMIN') && (
+        <div className="bg-surface-dark border border-surface-highlight rounded-2xl p-6 animate-in slide-in-from-top duration-300">
+          <form onSubmit={handleSave} className="flex flex-wrap items-end gap-4">
+            <div className="flex-1 min-w-[200px] space-y-2">
+              <label className="text-[10px] font-black text-[#9db9a6] uppercase tracking-[0.2em] ml-1">Empresa</label>
+              <select
+                required
+                disabled={isViewOnly}
+                title="Selecione a empresa"
+                value={formData.company_id}
+                onChange={(e) => setFormData(prev => ({ ...prev, company_id: e.target.value }))}
+                className="w-full h-12 bg-surface-darker border border-surface-highlight rounded-xl px-4 text-white text-sm focus:border-primary/50 transition-all outline-none appearance-none disabled:opacity-50"
+              >
+                <option value="">Selecione a empresa</option>
+                {companies.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex-1 min-w-[200px] space-y-2">
+              <label className="text-[10px] font-black text-[#9db9a6] uppercase tracking-[0.2em] ml-1">Instituição</label>
+              <select
+                required
+                disabled={isViewOnly}
+                title="Selecione a instituição"
+                value={formData.bank_id}
+                onChange={(e) => setFormData(prev => ({ ...prev, bank_id: e.target.value }))}
+                className="w-full h-12 bg-surface-darker border border-surface-highlight rounded-xl px-4 text-white text-sm focus:border-primary/50 transition-all outline-none appearance-none disabled:opacity-50"
+              >
+                <option value="">Selecione a instituição</option>
+                {banks.map(b => (
+                  <option key={b.id} value={b.id}>{b.name} ({b.account_type})</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex-[1.5] min-w-[240px] space-y-2">
+              <label className="text-[10px] font-black text-[#9db9a6] uppercase tracking-[0.2em] ml-1">Ativo / Descrição</label>
+              <input
+                required
+                disabled={isViewOnly}
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                className="w-full h-12 bg-surface-darker border border-surface-highlight rounded-xl px-4 text-white text-sm focus:border-primary/50 transition-all outline-none disabled:opacity-50"
+                placeholder="Ex: CDB 100% CDI, PETR4"
+              />
+            </div>
+
+            <div className="w-40 space-y-2">
+              <label className="text-[10px] font-black text-[#9db9a6] uppercase tracking-[0.2em] ml-1">Valor Aporte</label>
+              <input
+                required
+                disabled={isViewOnly}
+                type="number"
+                step="0.01"
+                value={formData.amount}
+                onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                className="w-full h-12 bg-surface-darker border border-surface-highlight rounded-xl px-4 text-white text-sm text-right focus:border-primary/50 transition-all outline-none disabled:opacity-50"
+                placeholder="0,00"
+              />
+            </div>
+
+            <div className="w-40 space-y-2">
+              <label className="text-[10px] font-black text-[#9db9a6] uppercase tracking-[0.2em] ml-1">Valor Atual</label>
+              <input
+                required
+                disabled={isViewOnly}
+                type="number"
+                step="0.01"
+                value={formData.current_value}
+                onChange={(e) => setFormData(prev => ({ ...prev, current_value: e.target.value }))}
+                className="w-full h-12 bg-surface-darker border border-surface-highlight rounded-xl px-4 text-white text-sm text-right focus:border-primary/50 transition-all outline-none disabled:opacity-50"
+                placeholder="0,00"
+              />
+            </div>
+
+            {!isViewOnly && (
+              <button
+                disabled={saving}
+                className="h-12 px-8 bg-primary text-background-dark font-black rounded-xl hover:bg-primary-hover transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-50"
+              >
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Check className="w-4 h-4" /> {editingId ? 'ATUALIZAR' : 'SALVAR'}</>}
+              </button>
+            )}
+            {isViewOnly && (
+              <button
+                type="button"
+                onClick={() => setIsViewOnly(false)}
+                className="h-12 px-8 bg-slate-200 text-slate-900 font-black rounded-xl hover:bg-slate-300 transition-all flex items-center justify-center gap-2 shadow-lg"
+              >
+                <Edit3 className="w-4 h-4" /> HABILITAR EDIÇÃO
+              </button>
+            )}
+          </form>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {[
@@ -250,7 +356,20 @@ const Investimentos: React.FC<{ user: User }> = ({ user }) => {
                       <td className="px-8 py-5">
                         <div className="flex items-center justify-center gap-2">
                           <button
-                            onClick={() => openEdit(inv)}
+                            onClick={() => {
+                              openEdit(inv, true);
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                            className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
+                            title="Visualizar"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              openEdit(inv, false);
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
                             className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
                             title="Editar"
                           >
@@ -274,105 +393,6 @@ const Investimentos: React.FC<{ user: User }> = ({ user }) => {
         </div>
       </div>
 
-      {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-surface-dark border border-surface-highlight rounded-3xl p-8 shadow-2xl w-full max-w-xl animate-in slide-in-from-bottom-4 duration-300">
-            <div className="flex justify-between items-center mb-10 border-b border-surface-highlight pb-6">
-              <h3 className="text-xl font-black text-white uppercase tracking-tight">
-                {editingId ? 'Editar Investimento' : 'Novo Aporte'}
-              </h3>
-              <button onClick={() => setShowForm(false)} className="text-slate-400 hover:text-danger transition-colors">
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSave} className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-[#9db9a6] uppercase tracking-widest">Empresa</label>
-                <select
-                  required
-                  value={formData.company_id}
-                  onChange={(e) => setFormData(prev => ({ ...prev, company_id: e.target.value }))}
-                  className="h-12 w-full rounded-xl border border-surface-highlight bg-[#111813] px-4 text-white focus:ring-1 focus:ring-primary"
-                >
-                  <option value="">Selecione uma empresa</option>
-                  {companies.map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-[#9db9a6] uppercase tracking-widest">Instituição</label>
-                <select
-                  required
-                  value={formData.bank_id}
-                  onChange={(e) => setFormData(prev => ({ ...prev, bank_id: e.target.value }))}
-                  className="h-12 w-full rounded-xl border border-surface-highlight bg-[#111813] px-4 text-white focus:ring-1 focus:ring-primary"
-                >
-                  <option value="">Selecione uma instituição</option>
-                  {banks.map(b => (
-                    <option key={b.id} value={b.id}>{b.name} ({b.account_type})</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-[#9db9a6] uppercase tracking-widest">Tipo / Ativo</label>
-                <input
-                  required
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  className="h-12 w-full rounded-xl border border-surface-highlight bg-[#111813] px-4 text-white"
-                  placeholder="Ex: CDB 100% CDI, PETR4, Bitcoin"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-[#9db9a6] uppercase tracking-widest">Valor do Aporte</label>
-                <input
-                  required
-                  type="number"
-                  step="0.01"
-                  value={formData.amount}
-                  onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
-                  className="h-12 w-full rounded-xl border border-surface-highlight bg-[#111813] px-4 text-white text-right"
-                  placeholder="0,00"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-[#9db9a6] uppercase tracking-widest">Valor Atual</label>
-                <input
-                  required
-                  type="number"
-                  step="0.01"
-                  value={formData.current_value}
-                  onChange={(e) => setFormData(prev => ({ ...prev, current_value: e.target.value }))}
-                  className="h-12 w-full rounded-xl border border-surface-highlight bg-[#111813] px-4 text-white text-right"
-                  placeholder="0,00"
-                />
-              </div>
-
-              <div className="flex justify-end gap-4 pt-6 border-t border-surface-highlight">
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="px-8 h-12 border border-surface-highlight text-[#9db9a6] font-black rounded-xl hover:bg-white/5 transition-all text-xs tracking-widest"
-                >
-                  CANCELAR
-                </button>
-                <button
-                  disabled={saving}
-                  className="px-10 h-12 bg-primary text-background-dark font-black rounded-xl shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
-                >
-                  {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : 'SALVAR'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

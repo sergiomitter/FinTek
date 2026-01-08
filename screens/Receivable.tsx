@@ -2,13 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '../types';
 import { supabase } from '../lib/supabase';
-import { Search, Download, PlusCircle, Edit3, Trash2, Calendar, Hourglass, AlertCircle, CheckCircle } from 'lucide-react';
+import { Search, Download, PlusCircle, Edit3, Trash2, Calendar, Hourglass, AlertCircle, CheckCircle, X } from 'lucide-react';
 import EditReceivableModal from '../components/EditReceivableModal';
 import ExportReceivableModal from '../components/ExportReceivableModal';
 
 interface Company { id: string; name: string; }
 interface Customer { id: string; name: string; }
-interface Bank { id: string; name: string; type: string; }
+interface Bank { id: string; name: string; type: string; account_number: string; agency: string; company?: { name: string } }
 interface ReceivableRecord {
   id: string;
   description: string;
@@ -23,6 +23,9 @@ interface ReceivableRecord {
   bank?: { name: string };
 }
 
+interface CustomerExtended extends Customer { trade_name?: string; }
+interface CompanyExtended extends Company { razao_social?: string; }
+
 const Receivable: React.FC<{ user: User }> = ({ user }) => {
   const isReadOnly = user.role === 'USER';
 
@@ -36,6 +39,7 @@ const Receivable: React.FC<{ user: User }> = ({ user }) => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'edit' | 'delete'>('edit');
   const [selectedRecord, setSelectedRecord] = useState<ReceivableRecord | null>(null);
+  const [isDrillDownOpen, setIsDrillDownOpen] = useState(false);
 
   // Form State
   const [description, setDescription] = useState('');
@@ -58,14 +62,14 @@ const Receivable: React.FC<{ user: User }> = ({ user }) => {
 
   const fetchInitialData = async () => {
     const [compRes, custRes, bankRes] = await Promise.all([
-      supabase.from('companies').select('id, name').order('name'),
-      supabase.from('customers').select('id, name').order('name'),
-      supabase.from('banks').select('id, name, type').order('name')
+      supabase.from('companies').select('id, name, razao_social').order('name'),
+      supabase.from('customers').select('id, name, trade_name').order('name'),
+      supabase.from('banks').select('id, name, type, agency, account_number, company:companies(name)').order('name')
     ]);
 
-    if (compRes.data) setCompanies(compRes.data);
-    if (custRes.data) setCustomers(custRes.data);
-    if (bankRes.data) setBanks(bankRes.data);
+    if (compRes.data) setCompanies(compRes.data as any);
+    if (custRes.data) setCustomers(custRes.data as any);
+    if (bankRes.data) setBanks(bankRes.data as any);
   };
 
   const fetchRecords = async () => {
@@ -165,8 +169,13 @@ const Receivable: React.FC<{ user: User }> = ({ user }) => {
     .reduce((acc, r) => acc + Number(r.amount), 0);
 
   const toggleFilter = (status: string) => {
-    if (filterStatus === status) setFilterStatus(null);
-    else setFilterStatus(status);
+    if (filterStatus === status) {
+      setFilterStatus(null);
+      setIsDrillDownOpen(false);
+    } else {
+      setFilterStatus(status);
+      setIsDrillDownOpen(true);
+    }
   };
 
   return (
@@ -249,13 +258,13 @@ const Receivable: React.FC<{ user: User }> = ({ user }) => {
       </div>
 
       <div className="flex flex-col xl:flex-row gap-8">
-        <div className={`xl:w-1/3 bg-white dark:bg-surface-dark border border-slate-200 dark:border-surface-highlight rounded-2xl p-8 shadow-sm h-fit ${isReadOnly ? 'opacity-50 pointer-events-none' : ''}`}>
+        <div className={`bg-white dark:bg-surface-dark border border-slate-200 dark:border-surface-highlight rounded-2xl p-8 shadow-sm ${isReadOnly ? 'opacity-50 pointer-events-none' : ''}`}>
           <div className="flex items-center gap-3 mb-8 border-b border-slate-200 dark:border-surface-highlight pb-6">
             <PlusCircle className="text-primary w-8 h-8" />
             <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Novo Lançamento</h3>
           </div>
-          <form onSubmit={handleSave} className="space-y-6">
-            <div className="flex flex-col gap-2">
+          <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 items-end">
+            <div className="lg:col-span-4 flex flex-col gap-2">
               <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Descrição</label>
               <input
                 required
@@ -265,7 +274,7 @@ const Receivable: React.FC<{ user: User }> = ({ user }) => {
                 onChange={e => setDescription(e.target.value)}
               />
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="lg:col-span-4 flex flex-col gap-2">
               <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Cliente</label>
               <select
                 required
@@ -274,10 +283,10 @@ const Receivable: React.FC<{ user: User }> = ({ user }) => {
                 onChange={e => setCustomerId(e.target.value)}
               >
                 <option value="" disabled>Selecione o cliente...</option>
-                {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {customers.map(c => <option key={c.id} value={c.id}>{(c as any).trade_name || c.name}</option>)}
               </select>
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="lg:col-span-4 flex flex-col gap-2">
               <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Empresa Destino</label>
               <select
                 required
@@ -289,8 +298,9 @@ const Receivable: React.FC<{ user: User }> = ({ user }) => {
                 {companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Banco para Crédito</label>
+
+            <div className="lg:col-span-4 flex flex-col gap-2">
+              <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Banco / Conta para Crédito</label>
               <select
                 required
                 className="w-full bg-slate-50 dark:bg-[#111813] border border-slate-200 dark:border-surface-highlight rounded-xl h-12 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold appearance-none"
@@ -298,43 +308,46 @@ const Receivable: React.FC<{ user: User }> = ({ user }) => {
                 onChange={e => setBankId(e.target.value)}
               >
                 <option value="" disabled>Selecione a conta bancária...</option>
-                {banks.map(b => <option key={b.id} value={b.id}>{b.name} - {b.type}</option>)}
+                {banks.map(b => (
+                  <option key={b.id} value={b.id}>
+                    {b.name} - Ag: {b.agency} Ct: {b.account_number} {b.company ? `- ${b.company.name}` : ''}
+                  </option>
+                ))}
               </select>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-2">
-                <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Valor (R$)</label>
-                <input
-                  required
-                  className="w-full bg-slate-50 dark:bg-[#111813] border border-slate-200 dark:border-surface-highlight rounded-xl h-12 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary text-right font-black"
-                  placeholder="0,00"
-                  value={amount}
-                  onChange={e => setAmount(e.target.value)}
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Vencimento</label>
-                <input
-                  type="date"
-                  required
-                  className="w-full bg-slate-50 dark:bg-[#111813] border border-slate-200 dark:border-surface-highlight rounded-xl h-12 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold"
-                  value={dueDate}
-                  onChange={e => setDueDate(e.target.value)}
-                />
-              </div>
+            <div className="lg:col-span-3 flex flex-col gap-2">
+              <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Data de Vencimento</label>
+              <input
+                type="date"
+                className="w-full bg-slate-50 dark:bg-[#111813] border border-slate-200 dark:border-surface-highlight rounded-xl h-12 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold"
+                value={dueDate}
+                onChange={e => setDueDate(e.target.value)}
+              />
             </div>
-            <button
-              type="submit"
-              disabled={saving}
-              className="w-full h-14 bg-primary hover:bg-primary-hover text-background-dark font-black rounded-xl transition shadow-lg shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              <PlusCircle className={`w-5 h-5 ${saving ? 'animate-spin' : ''}`} />
-              {saving ? 'SALVANDO...' : 'SALVAR RECEBIMENTO'}
-            </button>
+            <div className="lg:col-span-2 flex flex-col gap-2">
+              <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Valor (R$)</label>
+              <input
+                required
+                className="w-full bg-slate-50 dark:bg-[#111813] border border-slate-200 dark:border-surface-highlight rounded-xl h-12 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary text-right font-black"
+                placeholder="0,00"
+                value={amount}
+                onChange={e => setAmount(e.target.value)}
+              />
+            </div>
+            <div className="lg:col-span-3">
+              <button
+                type="submit"
+                disabled={saving}
+                className="w-full h-12 bg-primary hover:bg-primary-hover text-background-dark font-black rounded-xl transition shadow-lg shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                <PlusCircle className={`w-5 h-5 ${saving ? 'animate-spin' : ''}`} />
+                {saving ? 'SALVANDO...' : 'SALVAR RECEBIMENTO'}
+              </button>
+            </div>
           </form>
         </div>
 
-        <div className="xl:w-2/3 bg-white dark:bg-surface-dark border border-slate-200 dark:border-surface-highlight rounded-2xl overflow-hidden shadow-sm flex flex-col">
+        <div className="bg-white dark:bg-surface-dark border border-slate-200 dark:border-surface-highlight rounded-2xl overflow-hidden shadow-sm flex flex-col">
           <div className="p-6 border-b border-slate-200 dark:border-surface-highlight flex justify-between items-center bg-slate-50 dark:bg-surface-darker">
             <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider">Últimos Lançamentos</h3>
             {filterStatus && (
@@ -370,14 +383,23 @@ const Receivable: React.FC<{ user: User }> = ({ user }) => {
                     <tr key={row.id} className="hover:bg-slate-50 dark:hover:bg-surface-highlight/20 transition-all group">
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase border ${row.status === 'RECEIVED' ? 'bg-primary/10 text-primary border-primary/20' :
-                            (overdueDays > 0 || row.status === 'OVERDUE') ? 'bg-danger/10 text-danger border-danger/20' :
-                              'bg-yellow-500/10 text-yellow-700 dark:text-yellow-500 border-yellow-500/20'
+                          (overdueDays > 0 || row.status === 'OVERDUE') ? 'bg-danger/10 text-danger border-danger/20' :
+                            'bg-yellow-500/10 text-yellow-700 dark:text-yellow-500 border-yellow-500/20'
                           }`}>
                           {row.status === 'RECEIVED' ? 'RECEBIDO' : overdueDays > 0 ? 'ATRASADO' : 'PENDENTE'}
                         </span>
                       </td>
                       <td className="px-6 py-4 font-black text-slate-900 dark:text-white capitalize">{row.description}</td>
-                      <td className="px-6 py-4 text-slate-600 dark:text-text-secondary">{row.customer?.name}</td>
+                      <td className="px-6 py-4 text-slate-600 dark:text-text-secondary">
+                        <div className="flex flex-col">
+                          <span className="font-bold text-slate-900 dark:text-white">
+                            {(customers.find(c => c.id === row.customer_id) as any)?.trade_name || row.customer?.name}
+                          </span>
+                          {(customers.find(c => c.id === row.customer_id) as any)?.trade_name && (
+                            <span className="text-[10px] text-slate-400 font-medium uppercase">{row.customer?.name}</span>
+                          )}
+                        </div>
+                      </td>
                       <td className="px-6 py-4 text-right font-black text-slate-900 dark:text-white">
                         {Number(row.amount).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                       </td>
@@ -448,6 +470,77 @@ const Receivable: React.FC<{ user: User }> = ({ user }) => {
         onSuccess={fetchRecords}
         mode={modalMode}
       />
+
+      {/* KPI Drill Down Modal */}
+      {isDrillDownOpen && filterStatus && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-surface-dark border border-slate-200 dark:border-surface-highlight rounded-3xl p-8 shadow-2xl w-full max-w-4xl max-h-[80vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 duration-300">
+            <div className="flex justify-between items-center mb-6 border-b border-slate-100 dark:border-surface-highlight pb-6">
+              <div>
+                <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                  Detalhes: {filterStatus === 'RECEIVED' ? 'Recebidos Hoje' : filterStatus === 'OVERDUE' ? 'Vencidos' : 'Pendentes no Mês'}
+                </h3>
+                <p className="text-xs font-bold text-primary uppercase tracking-widest mt-1">
+                  Total: {filteredRecords.reduce((acc, r) => acc + Number(r.amount), 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </p>
+              </div>
+              <button
+                onClick={() => setIsDrillDownOpen(false)}
+                className="text-slate-400 hover:text-danger transition-colors"
+                title="Fechar"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="overflow-y-auto pr-2 custom-scrollbar">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="text-[10px] uppercase font-black tracking-widest text-slate-400 border-b border-slate-100 dark:border-surface-highlight">
+                    <th className="px-4 py-3">Vencimento</th>
+                    <th className="px-4 py-3">Cliente (Nome Fantasia)</th>
+                    <th className="px-4 py-3">Empresa</th>
+                    <th className="px-4 py-3 text-right">Valor</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50 dark:divide-surface-highlight">
+                  {filteredRecords.map((r) => (
+                    <tr key={r.id}>
+                      <td className="px-4 py-4 text-xs font-bold text-slate-900 dark:text-white">
+                        {new Date(r.due_date).toLocaleDateString('pt-BR')}
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="flex flex-col">
+                          <span className="text-xs font-bold text-slate-900 dark:text-white">
+                            {(customers.find(c => c.id === r.customer_id) as any)?.trade_name || r.customer?.name}
+                          </span>
+                          <span className="text-[9px] text-slate-400 uppercase font-medium">{r.customer?.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 text-[10px] font-black text-slate-500 uppercase">
+                        {companies.find(c => c.id === r.company_id)?.name}
+                      </td>
+                      <td className="px-4 py-4 text-right text-xs font-black text-slate-900 dark:text-white">
+                        {Number(r.amount).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-slate-100 dark:border-surface-highlight flex justify-end">
+              <button
+                onClick={() => setIsDrillDownOpen(false)}
+                title="Fechar"
+                className="px-8 h-12 bg-slate-900 dark:bg-white text-white dark:text-background-dark font-black rounded-xl text-xs tracking-widest hover:scale-[1.02] transition-all"
+              >
+                FECHAR
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

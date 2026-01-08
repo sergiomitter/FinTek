@@ -167,63 +167,47 @@ const KPIModal: React.FC<{
   );
 };
 
-// Mock data for KPIs
-const kpiData: Record<string, KPIModalData> = {
-  aPagarHoje: {
-    title: 'Contas a Pagar Hoje',
-    icon: 'payments',
-    type: 'pagar',
-    records: [
-      { id: '1', description: 'Aluguel do Escritório', entity: 'Imobiliária Central', value: 'R$ 4.500,00', date: '24/10/2023', status: 'VENCENDO' },
-      { id: '2', description: 'Serviço de Internet', entity: 'Telecom Brasil', value: 'R$ 450,00', date: '24/10/2023', status: 'VENCENDO' },
-      { id: '3', description: 'Energia Elétrica', entity: 'COPEL', value: 'R$ 7.500,00', date: '24/10/2023', status: 'VENCENDO' },
-    ]
-  },
-  pagoNoMes: {
-    title: 'Contas Pagas no Mês',
-    icon: 'check_circle',
-    type: 'pago',
-    records: [
-      { id: '1', description: 'Folha de Pagamento', entity: 'Funcionários', value: 'R$ 85.000,00', date: '05/10/2023', status: 'PAGO' },
-      { id: '2', description: 'Impostos Federais', entity: 'Receita Federal', value: 'R$ 22.500,00', date: '10/10/2023', status: 'PAGO' },
-      { id: '3', description: 'Fornecedor Equipamentos', entity: 'Tech Supply', value: 'R$ 18.200,00', date: '12/10/2023', status: 'PAGO' },
-      { id: '4', description: 'Seguro Empresarial', entity: 'Porto Seguro', value: 'R$ 8.500,00', date: '15/10/2023', status: 'PAGO' },
-      { id: '5', description: 'Marketing Digital', entity: 'Agência XYZ', value: 'R$ 11.000,00', date: '18/10/2023', status: 'PAGO' },
-    ]
-  },
-  investidoHoje: {
-    title: 'Investimentos Realizados Hoje',
-    icon: 'savings',
-    type: 'investido',
-    records: [
-      { id: '1', description: 'Aporte CDB 100% CDI', entity: 'NuBank', value: 'R$ 3.000,00', date: '24/10/2023', status: 'APLICADO' },
-      { id: '2', description: 'Compra de FIIs', entity: 'XP Investimentos', value: 'R$ 2.000,00', date: '24/10/2023', status: 'APLICADO' },
-    ]
-  },
-  recebidoMes: {
-    title: 'Recebimentos do Mês',
-    icon: 'account_balance',
-    type: 'recebido',
-    records: [
-      { id: '1', description: 'Consultoria TI - Agosto', entity: 'Tech Solutions', value: 'R$ 45.000,00', date: '02/10/2023', status: 'RECEBIDO' },
-      { id: '2', description: 'Projeto Sistema ERP', entity: 'Indústria Omega', value: 'R$ 75.000,00', date: '08/10/2023', status: 'RECEBIDO' },
-      { id: '3', description: 'Suporte Mensal', entity: 'Alpha Corp', value: 'R$ 12.000,00', date: '15/10/2023', status: 'RECEBIDO' },
-      { id: '4', description: 'Treinamento Equipe', entity: 'Banco Nacional', value: 'R$ 28.000,00', date: '20/10/2023', status: 'RECEBIDO' },
-      { id: '5', description: 'Licença Software', entity: 'StartupX', value: 'R$ 20.000,00', date: '22/10/2023', status: 'RECEBIDO' },
-    ]
-  }
-};
+// Data fetching and processing logic moved inside component
 
 const Dashboard: React.FC<{ user: User }> = ({ user }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedKPI, setSelectedKPI] = useState<KPIModalData | null>(null);
   const [securityAlerts, setSecurityAlerts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Real data state
+  const [payables, setPayables] = useState<any[]>([]);
+  const [receivables, setReceivables] = useState<any[]>([]);
+  const [investments, setInvestments] = useState<any[]>([]);
+  const [banks, setBanks] = useState<any[]>([]);
 
   useEffect(() => {
+    fetchDashboardData();
     if (user.role === 'MASTER_ADMIN') {
       fetchSecurityAlerts();
     }
   }, [user]);
+
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    const today = new Date().toISOString().split('T')[0];
+    const firstDayMonth = new Date();
+    firstDayMonth.setDate(1);
+    const firstDayMonthStr = firstDayMonth.toISOString().split('T')[0];
+
+    const [payRes, recRes, invRes, bankRes] = await Promise.all([
+      supabase.from('payables').select('*, supplier:suppliers(name), company:companies(name)').order('due_date'),
+      supabase.from('receivables').select('*, customer:customers(name), company:companies(name)').order('due_date'),
+      supabase.from('investments').select('*, bank:banks(name), company:companies(name)').order('created_at'),
+      supabase.from('banks').select('*, company:companies(name)').order('name')
+    ]);
+
+    if (payRes.data) setPayables(payRes.data);
+    if (recRes.data) setReceivables(recRes.data);
+    if (invRes.data) setInvestments(invRes.data);
+    if (bankRes.data) setBanks(bankRes.data);
+    setLoading(false);
+  };
 
   const fetchSecurityAlerts = async () => {
     const { data } = await supabase
@@ -234,8 +218,66 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
     setSecurityAlerts(data || []);
   };
 
-  const handleKPIClick = (kpiKey: string) => {
-    setSelectedKPI(kpiData[kpiKey]);
+  const formatBRL = (val: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+
+  const handleKPIClick = (type: 'pagar' | 'pago' | 'investido' | 'recebido') => {
+    const today = new Date().toISOString().split('T')[0];
+    const month = new Date().getMonth();
+    const year = new Date().getFullYear();
+
+    let data: KPIModalData | null = null;
+
+    if (type === 'pagar') {
+      const records = payables
+        .filter(p => p.due_date === today && p.status !== 'PAID')
+        .map(p => ({
+          id: p.id,
+          description: p.description,
+          entity: p.supplier?.name || 'N/A',
+          value: formatBRL(p.amount),
+          date: new Date(p.due_date).toLocaleDateString('pt-BR'),
+          status: new Date(p.due_date) < new Date(today) ? 'ATRASADO' : 'PENDENTE'
+        }));
+      data = { title: 'Contas a Pagar Hoje', icon: 'payments', type: 'pagar', records };
+    } else if (type === 'pago') {
+      const records = payables
+        .filter(p => p.status === 'PAID' && new Date(p.due_date).getMonth() === month && new Date(p.due_date).getFullYear() === year)
+        .map(p => ({
+          id: p.id,
+          description: p.description,
+          entity: p.supplier?.name || 'N/A',
+          value: formatBRL(p.amount),
+          date: new Date(p.due_date).toLocaleDateString('pt-BR'),
+          status: 'PAGO'
+        }));
+      data = { title: 'Contas Pagas no Mês', icon: 'check_circle', type: 'pago', records };
+    } else if (type === 'investido') {
+      const records = investments
+        .filter(i => i.created_at.split('T')[0] === today)
+        .map(i => ({
+          id: i.id,
+          description: i.description,
+          entity: i.bank?.name || 'N/A',
+          value: formatBRL(i.amount),
+          date: new Date(i.created_at).toLocaleDateString('pt-BR'),
+          status: 'APLICADO'
+        }));
+      data = { title: 'Investimentos de Hoje', icon: 'savings', type: 'investido', records };
+    } else if (type === 'recebido') {
+      const records = receivables
+        .filter(r => r.status === 'RECEIVED' && new Date(r.due_date).getMonth() === month && new Date(r.due_date).getFullYear() === year)
+        .map(r => ({
+          id: r.id,
+          description: r.description,
+          entity: r.customer?.name || 'N/A',
+          value: formatBRL(r.amount),
+          date: new Date(r.due_date).toLocaleDateString('pt-BR'),
+          status: 'RECEBIDO'
+        }));
+      data = { title: 'Recebimentos do Mês', icon: 'account_balance', type: 'recebido', records };
+    }
+
+    setSelectedKPI(data);
     setModalOpen(true);
   };
 
@@ -260,7 +302,9 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <p className="text-slate-500 dark:text-text-secondary text-sm font-bold uppercase tracking-wide mb-1">Olá, {user.nome.split(' ')[0]}!</p>
-          <h1 className="text-slate-900 dark:text-white text-4xl font-black tracking-tight">Hoje, 24 de Outubro</h1>
+          <h1 className="text-slate-900 dark:text-white text-4xl font-black tracking-tight capitalize">
+            {new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' })}
+          </h1>
         </div>
         <div className="flex gap-3">
           {(user.role === 'MASTER_ADMIN' || user.role === 'ADMIN') && (
@@ -307,35 +351,35 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <DashboardCard
           title="A Pagar Hoje"
-          amount="R$ 12.450,00"
+          amount={formatBRL(payables.filter(p => p.due_date === new Date().toISOString().split('T')[0] && p.status !== 'PAID').reduce((acc, p) => acc + p.amount, 0))}
           icon="payments"
-          trend="3 títulos vencendo"
+          trend={`${payables.filter(p => p.due_date === new Date().toISOString().split('T')[0] && p.status !== 'PAID').length} títulos para hoje`}
           trendType="negative"
           color="danger"
-          onClick={() => handleKPIClick('aPagarHoje')}
+          onClick={() => handleKPIClick('pagar')}
         />
         <DashboardCard
           title="Pago no Mês"
-          amount="R$ 145.200,00"
+          amount={formatBRL(payables.filter(p => p.status === 'PAID' && new Date(p.due_date).getMonth() === new Date().getMonth()).reduce((acc, p) => acc + p.amount, 0))}
           icon="check_circle"
-          trend="42 contas pagas"
+          trend={`${payables.filter(p => p.status === 'PAID' && new Date(p.due_date).getMonth() === new Date().getMonth()).length} contas pagas`}
           trendType="positive"
-          onClick={() => handleKPIClick('pagoNoMes')}
+          onClick={() => handleKPIClick('pago')}
         />
         <DashboardCard
           title="Investido Hoje"
-          amount="R$ 5.000,00"
+          amount={formatBRL(investments.filter(i => i.created_at.split('T')[0] === new Date().toISOString().split('T')[0]).reduce((acc, i) => acc + i.amount, 0))}
           icon="savings"
-          trend="Aporte programado"
-          onClick={() => handleKPIClick('investidoHoje')}
+          trend={`${investments.filter(i => i.created_at.split('T')[0] === new Date().toISOString().split('T')[0]).length} novos aportes`}
+          onClick={() => handleKPIClick('investido')}
         />
         <DashboardCard
-          title="Recebido Mês"
-          amount="R$ 180.000,00"
+          title="Recebido no Mês"
+          amount={formatBRL(receivables.filter(r => r.status === 'RECEIVED' && new Date(r.due_date).getMonth() === new Date().getMonth()).reduce((acc, r) => acc + r.amount, 0))}
           icon="account_balance"
-          trend="+8% vs mês anterior"
+          trend={`${receivables.filter(r => r.status === 'RECEIVED' && new Date(r.due_date).getMonth() === new Date().getMonth()).length} recebimentos`}
           trendType="positive"
-          onClick={() => handleKPIClick('recebidoMes')}
+          onClick={() => handleKPIClick('recebido')}
         />
       </div>
 
@@ -345,15 +389,19 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
               <div>
                 <h3 className="text-slate-900 dark:text-white text-xl font-black">Fluxo Mensal</h3>
-                <p className="text-slate-500 dark:text-text-secondary text-sm font-medium">Comparativo de Entradas e Saídas</p>
+                <p className="text-slate-500 dark:text-text-secondary text-sm font-medium">Entradas vs Saídas do Mês Atual</p>
               </div>
               <div className="bg-slate-50 dark:bg-surface-highlight/50 border border-slate-200 dark:border-surface-highlight rounded-2xl p-4 flex items-center gap-6 shadow-inner">
                 <div>
-                  <p className="text-slate-500 dark:text-[#9db9a6] text-[10px] font-black uppercase tracking-wider">Saldo Líquido</p>
-                  <p className="text-primary text-2xl font-black">+ R$ 34.800,00</p>
+                  <p className="text-slate-500 dark:text-[#9db9a6] text-[10px] font-black uppercase tracking-wider">Saldo Mensal</p>
+                  <p className={`text-2xl font-black ${receivables.filter(r => r.status === 'RECEIVED' && new Date(r.due_date).getMonth() === new Date().getMonth()).reduce((acc, r) => acc + r.amount, 0) - payables.filter(p => new Date(p.due_date).getMonth() === new Date().getMonth()).reduce((acc, p) => acc + p.amount, 0) >= 0 ? 'text-primary' : 'text-danger'}`}>
+                    {formatBRL(receivables.filter(r => r.status === 'RECEIVED' && new Date(r.due_date).getMonth() === new Date().getMonth()).reduce((acc, r) => acc + r.amount, 0) - payables.filter(p => new Date(p.due_date).getMonth() === new Date().getMonth()).reduce((acc, p) => acc + p.amount, 0))}
+                  </p>
                 </div>
-                <div className="p-2 bg-primary/10 text-primary rounded-xl">
-                  <span className="material-symbols-outlined text-3xl">trending_up</span>
+                <div className={`p-2 rounded-xl ${receivables.filter(r => r.status === 'RECEIVED' && new Date(r.due_date).getMonth() === new Date().getMonth()).reduce((acc, r) => acc + r.amount, 0) - payables.filter(p => new Date(p.due_date).getMonth() === new Date().getMonth()).reduce((acc, p) => acc + p.amount, 0) >= 0 ? 'bg-primary/10 text-primary' : 'bg-danger/10 text-danger'}`}>
+                  <span className="material-symbols-outlined text-3xl">
+                    {receivables.filter(r => r.status === 'RECEIVED' && new Date(r.due_date).getMonth() === new Date().getMonth()).reduce((acc, r) => acc + r.amount, 0) - payables.filter(p => new Date(p.due_date).getMonth() === new Date().getMonth()).reduce((acc, p) => acc + p.amount, 0) >= 0 ? 'trending_up' : 'trending_down'}
+                  </span>
                 </div>
               </div>
             </div>
@@ -362,16 +410,26 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
               <div className="flex items-center gap-6">
                 <span className="w-20 text-right text-xs font-black text-slate-400 dark:text-[#9db9a6] uppercase tracking-wider">Receitas</span>
                 <div className="flex-1 h-12 bg-slate-50 dark:bg-surface-highlight/30 rounded-2xl relative overflow-hidden shadow-inner">
-                  <div className="h-full bg-gradient-to-r from-primary/60 to-primary w-[85%] rounded-2xl flex items-center justify-end px-4 shadow-lg">
-                    <span className="text-background-dark font-black text-sm">R$ 180.000,00</span>
+                  <div
+                    className="h-full bg-gradient-to-r from-primary/60 to-primary rounded-2xl flex items-center justify-end px-4 shadow-lg transition-all duration-1000"
+                    style={{ width: `${Math.min(100, (receivables.filter(r => r.status === 'RECEIVED' && new Date(r.due_date).getMonth() === new Date().getMonth()).reduce((acc, r) => acc + r.amount, 0) / Math.max(1, receivables.filter(r => r.status === 'RECEIVED' && new Date(r.due_date).getMonth() === new Date().getMonth()).reduce((acc, r) => acc + r.amount, 0), payables.filter(p => new Date(p.due_date).getMonth() === new Date().getMonth()).reduce((acc, p) => acc + p.amount, 0))) * 100)}%` }}
+                  >
+                    <span className="text-background-dark font-black text-sm whitespace-nowrap">
+                      {formatBRL(receivables.filter(r => r.status === 'RECEIVED' && new Date(r.due_date).getMonth() === new Date().getMonth()).reduce((acc, r) => acc + r.amount, 0))}
+                    </span>
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-6">
                 <span className="w-20 text-right text-xs font-black text-slate-400 dark:text-[#9db9a6] uppercase tracking-wider">Despesas</span>
                 <div className="flex-1 h-12 bg-slate-50 dark:bg-surface-highlight/30 rounded-2xl relative overflow-hidden shadow-inner">
-                  <div className="h-full bg-gradient-to-r from-danger/60 to-danger w-[68%] rounded-2xl flex items-center justify-end px-4 shadow-lg">
-                    <span className="text-white font-black text-sm">R$ 145.200,00</span>
+                  <div
+                    className="h-full bg-gradient-to-r from-danger/60 to-danger rounded-2xl flex items-center justify-end px-4 shadow-lg transition-all duration-1000"
+                    style={{ width: `${Math.min(100, (payables.filter(p => new Date(p.due_date).getMonth() === new Date().getMonth()).reduce((acc, p) => acc + p.amount, 0) / Math.max(1, receivables.filter(r => r.status === 'RECEIVED' && new Date(r.due_date).getMonth() === new Date().getMonth()).reduce((acc, r) => acc + r.amount, 0), payables.filter(p => new Date(p.due_date).getMonth() === new Date().getMonth()).reduce((acc, p) => acc + p.amount, 0))) * 100)}%` }}
+                  >
+                    <span className="text-white font-black text-sm whitespace-nowrap">
+                      {formatBRL(payables.filter(p => new Date(p.due_date).getMonth() === new Date().getMonth()).reduce((acc, p) => acc + p.amount, 0))}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -393,23 +451,18 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
               <span className="text-[10px] font-black bg-slate-200 dark:bg-surface-highlight text-slate-700 dark:text-[#9db9a6] px-2 py-1 rounded-md uppercase tracking-wider">Ativos</span>
             </div>
             <div className="p-2">
-              {[
-                { name: 'Nubank', type: 'Conta Corrente', color: 'bg-purple-900', label: 'NU', balance: 'R$ 15.420,00' },
-                { name: 'Itaú', type: 'Poupança', color: 'bg-orange-600', label: 'IT', balance: 'R$ 8.230,50' },
-                { name: 'Banco do Brasil', type: 'Investimento', color: 'bg-yellow-600', label: 'BB', balance: 'R$ 42.100,00' },
-                { name: 'Inter PJ', type: 'Giro', color: 'bg-slate-700', label: 'IN', balance: 'R$ 25.600,00' }
-              ].map((bank, i) => (
-                <div key={i} className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-surface-highlight rounded-xl transition-all cursor-pointer group">
+              {banks.map((bank, i) => (
+                <div key={bank.id} className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-surface-highlight rounded-xl transition-all cursor-pointer group">
                   <div className="flex items-center gap-4">
-                    <div className={`size-10 rounded-full ${bank.color} flex items-center justify-center text-white font-black text-xs border-2 border-white dark:border-white/10 shadow-sm group-hover:scale-110 transition-transform`}>
-                      {bank.label}
+                    <div className={`size-10 rounded-full bg-slate-700 flex items-center justify-center text-white font-black text-xs border-2 border-white dark:border-white/10 shadow-sm group-hover:scale-110 transition-transform`}>
+                      {bank.name.substring(0, 2).toUpperCase()}
                     </div>
                     <div>
                       <p className="text-slate-900 dark:text-white text-sm font-black">{bank.name}</p>
-                      <p className="text-slate-400 dark:text-text-secondary text-[10px] font-black uppercase tracking-wider">{bank.type}</p>
+                      <p className="text-slate-400 dark:text-text-secondary text-[10px] font-black uppercase tracking-wider">{bank.type} {bank.company ? `- ${bank.company.name}` : ''}</p>
                     </div>
                   </div>
-                  <p className="text-slate-900 dark:text-white font-black text-sm">{bank.balance}</p>
+                  <p className="text-slate-900 dark:text-white font-black text-sm">-</p>
                 </div>
               ))}
             </div>

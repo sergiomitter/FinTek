@@ -29,6 +29,7 @@ const SupplierReg: React.FC<{ user: User }> = ({ user }) => {
   const [formData, setFormData] = useState({
     cnpj_cpf: '',
     name: '',
+    trade_name: '',
     email: '',
     phone: ''
   });
@@ -69,6 +70,7 @@ const SupplierReg: React.FC<{ user: User }> = ({ user }) => {
           setFormData(prev => ({
             ...prev,
             name: data.razao_social || prev.name,
+            trade_name: data.nome_fantasia || prev.trade_name,
             email: data.email || prev.email
           }));
         }
@@ -89,6 +91,7 @@ const SupplierReg: React.FC<{ user: User }> = ({ user }) => {
 
     const payload = {
       name: formData.name,
+      trade_name: formData.trade_name,
       cnpj_cpf: formData.cnpj_cpf,
       email: formData.email,
       phone: formData.phone,
@@ -151,6 +154,7 @@ const SupplierReg: React.FC<{ user: User }> = ({ user }) => {
     setFormData({
       cnpj_cpf: supplier.cnpj_cpf || '',
       name: supplier.name || '',
+      trade_name: supplier.trade_name || '',
       email: supplier.email || '',
       phone: supplier.phone || ''
     });
@@ -159,6 +163,7 @@ const SupplierReg: React.FC<{ user: User }> = ({ user }) => {
 
   const filteredSuppliers = suppliers.filter(s =>
     s.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    s.trade_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.cnpj_cpf?.includes(searchTerm)
   );
 
@@ -174,7 +179,7 @@ const SupplierReg: React.FC<{ user: User }> = ({ user }) => {
           <button
             onClick={() => {
               setEditingId(null);
-              setFormData({ cnpj_cpf: '', name: '', email: '', phone: '' });
+              setFormData({ cnpj_cpf: '', name: '', trade_name: '', email: '', phone: '' });
               setShowForm(true);
             }}
             className="px-8 h-12 rounded-xl bg-primary text-background-dark font-black shadow-lg shadow-primary/20 flex items-center gap-2 hover:scale-[1.02] transition-all"
@@ -228,7 +233,10 @@ const SupplierReg: React.FC<{ user: User }> = ({ user }) => {
                         <div className="size-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
                           <Building2 className="w-5 h-5" />
                         </div>
-                        <span className="font-bold text-slate-900 dark:text-white">{s.name}</span>
+                        <div className="flex flex-col">
+                          <span className="font-bold text-slate-900 dark:text-white capitalize">{s.trade_name || s.name}</span>
+                          {s.trade_name && <span className="text-[10px] text-slate-400 font-medium tracking-wider uppercase">{s.name}</span>}
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-5">
@@ -318,6 +326,15 @@ const SupplierReg: React.FC<{ user: User }> = ({ user }) => {
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                     className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold transition-all"
                     placeholder="Ex: Fornecedor de Serviços Ltda"
+                  />
+                </div>
+                <div className="md:col-span-2 space-y-2">
+                  <label className="text-xs font-black text-slate-600 dark:text-text-secondary uppercase tracking-widest">Nome Fantasia</label>
+                  <input
+                    value={formData.trade_name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, trade_name: e.target.value }))}
+                    className="h-12 w-full rounded-xl border border-slate-200 dark:border-surface-highlight bg-slate-50 dark:bg-surface-darker px-4 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary font-bold transition-all"
+                    placeholder="Ex: Apelido Comercial"
                   />
                 </div>
                 <div className="space-y-2">
