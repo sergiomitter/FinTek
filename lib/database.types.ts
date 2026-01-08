@@ -119,39 +119,6 @@ export type Database = {
                 }
                 Relationships: []
             }
-            customers: {
-                Row: {
-                    cnpj_cpf: string
-                    created_at: string | null
-                    email: string | null
-                    id: string
-                    is_active: boolean | null
-                    name: string
-                    phone: string | null
-                    trade_name: string | null
-                }
-                Insert: {
-                    cnpj_cpf: string
-                    created_at?: string | null
-                    email?: string | null
-                    id?: string
-                    is_active?: boolean | null
-                    name: string
-                    phone?: string | null
-                    trade_name?: string | null
-                }
-                Update: {
-                    cnpj_cpf?: string
-                    created_at?: string | null
-                    email?: string | null
-                    id?: string
-                    is_active?: boolean | null
-                    name?: string
-                    phone?: string | null
-                    trade_name?: string | null
-                }
-                Relationships: []
-            }
             investments: {
                 Row: {
                     amount: number
@@ -213,6 +180,33 @@ export type Database = {
                     }
                 ]
             }
+            people: {
+                Row: {
+                    cpf: string | null
+                    created_at: string | null
+                    id: string
+                    is_active: boolean | null
+                    name: string
+                    nickname: string | null
+                }
+                Insert: {
+                    cpf?: string | null
+                    created_at?: string | null
+                    id?: string
+                    is_active?: boolean | null
+                    name: string
+                    nickname?: string | null
+                }
+                Update: {
+                    cpf?: string | null
+                    created_at?: string | null
+                    id?: string
+                    is_active?: boolean | null
+                    name?: string
+                    nickname?: string | null
+                }
+                Relationships: []
+            }
             payables: {
                 Row: {
                     amount: number
@@ -271,66 +265,6 @@ export type Database = {
                     }
                 ]
             }
-            people: {
-                Row: {
-                    cpf: string | null
-                    created_at: string | null
-                    id: string
-                    is_active: boolean | null
-                    name: string
-                    nickname: string | null
-                }
-                Insert: {
-                    cpf?: string | null
-                    created_at?: string | null
-                    id?: string
-                    is_active?: boolean | null
-                    name: string
-                    nickname?: string | null
-                }
-                Update: {
-                    cpf?: string | null
-                    created_at?: string | null
-                    id?: string
-                    is_active?: boolean | null
-                    name?: string
-                    nickname?: string | null
-                }
-                Relationships: []
-            }
-            profiles: {
-                Row: {
-                    celular: string | null
-                    created_at: string | null
-                    funcao: string | null
-                    id: string
-                    is_blocked: boolean | null
-                    is_first_access: boolean | null
-                    nome: string
-                    role: string | null
-                }
-                Insert: {
-                    celular?: string | null
-                    created_at?: string | null
-                    funcao?: string | null
-                    id: string
-                    is_blocked?: boolean | null
-                    is_first_access?: boolean | null
-                    nome: string
-                    role?: string | null
-                }
-                Update: {
-                    celular?: string | null
-                    created_at?: string | null
-                    funcao?: string | null
-                    id?: string
-                    is_blocked?: boolean | null
-                    is_first_access?: boolean | null
-                    nome?: string
-                    role?: string | null
-                }
-                Relationships: []
-            }
             receivables: {
                 Row: {
                     amount: number
@@ -388,39 +322,6 @@ export type Database = {
                         referencedColumns: ["id"]
                     }
                 ]
-            }
-            suppliers: {
-                Row: {
-                    cnpj_cpf: string
-                    created_at: string | null
-                    email: string | null
-                    id: string
-                    is_active: boolean | null
-                    name: string
-                    phone: string | null
-                    trade_name: string | null
-                }
-                Insert: {
-                    cnpj_cpf: string
-                    created_at?: string | null
-                    email?: string | null
-                    id?: string
-                    is_active?: boolean | null
-                    name: string
-                    phone?: string | null
-                    trade_name?: string | null
-                }
-                Update: {
-                    cnpj_cpf?: string
-                    created_at?: string | null
-                    email?: string | null
-                    id?: string
-                    is_active?: boolean | null
-                    name?: string
-                    phone?: string | null
-                    trade_name?: string | null
-                }
-                Relationships: []
             }
         }
     }
