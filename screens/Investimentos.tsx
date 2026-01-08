@@ -171,7 +171,7 @@ const Investimentos: React.FC<{ user: User }> = ({ user }) => {
   }, {});
 
   return (
-    <div className="p-6 lg:p-10 space-y-10 max-w-7xl mx-auto">
+    <div className="p-6 lg:p-10 space-y-10 w-full">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6 border-b border-surface-highlight">
         <div className="flex flex-col gap-2">
           <h1 className="text-4xl font-black text-white tracking-tight">Investimentos/Saldo bancário</h1>
@@ -195,12 +195,31 @@ const Investimentos: React.FC<{ user: User }> = ({ user }) => {
         )}
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {[
+          { label: 'Total Investido', value: totalInvested, icon: DollarSign, color: 'primary' },
+          { label: 'Bancos', value: byType.BANK || 0, icon: Wallet, color: 'primary' },
+          { label: 'Corretoras', value: byType.BROKER || 0, icon: TrendingUp, color: 'primary' },
+          { label: 'Exchanges', value: byType.EXCHANGE || 0, icon: Percent, color: 'warning' }
+        ].map((stat, i) => (
+          <div key={i} className="bg-surface-dark rounded-2xl p-8 border border-surface-highlight shadow-2xl relative group overflow-hidden">
+            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-all">
+              <stat.icon className={`w-16 h-16 text-${stat.color}`} />
+            </div>
+            <p className="text-[#9db9a6] text-[10px] font-bold uppercase tracking-widest mb-2">{stat.label}</p>
+            <p className="text-3xl font-black text-white tracking-tight">
+              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stat.value)}
+            </p>
+          </div>
+        ))}
+      </div>
+
       {showForm && (user.role === 'MASTER_ADMIN' || user.role === 'ADMIN') && (
         <div className="bg-surface-dark border border-surface-highlight rounded-2xl p-8 animate-in slide-in-from-top duration-300 shadow-xl">
           <div className="flex items-center gap-3 mb-8 border-b border-surface-highlight pb-6">
-            <TrendingUp className="text-primary w-8 h-8" />
+            <Plus className="text-primary w-8 h-8" />
             <h3 className="text-xl font-black text-white uppercase tracking-tight">
-              {editingId ? 'Editar Investimento' : 'Novo Lançamento'}
+              {editingId ? 'Editar Lançamento' : 'Novo Lançamento'}
             </h3>
           </div>
           <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 items-end">
@@ -323,28 +342,9 @@ const Investimentos: React.FC<{ user: User }> = ({ user }) => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {[
-          { label: 'Total Investido', value: totalInvested, icon: DollarSign, color: 'primary' },
-          { label: 'Bancos', value: byType.BANK || 0, icon: Wallet, color: 'primary' },
-          { label: 'Corretoras', value: byType.BROKER || 0, icon: TrendingUp, color: 'primary' },
-          { label: 'Exchanges', value: byType.EXCHANGE || 0, icon: Percent, color: 'warning' }
-        ].map((stat, i) => (
-          <div key={i} className="bg-surface-dark rounded-2xl p-8 border border-surface-highlight shadow-2xl relative group overflow-hidden">
-            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-all">
-              <stat.icon className={`w-16 h-16 text-${stat.color}`} />
-            </div>
-            <p className="text-[#9db9a6] text-[10px] font-bold uppercase tracking-widest mb-2">{stat.label}</p>
-            <p className="text-3xl font-black text-white tracking-tight">
-              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stat.value)}
-            </p>
-          </div>
-        ))}
-      </div>
-
       <div className="bg-surface-dark rounded-2xl border border-surface-highlight overflow-hidden shadow-2xl">
         <div className="p-6 bg-[#152019] border-b border-surface-highlight">
-          <h3 className="text-lg font-bold text-white">Carteira de Ativos</h3>
+          <h3 className="text-lg font-bold text-white uppercase tracking-tight">Carteira de Ativos</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -352,7 +352,7 @@ const Investimentos: React.FC<{ user: User }> = ({ user }) => {
               <tr>
                 <th className="px-8 py-5">Empresa</th>
                 <th className="px-8 py-5">Instituição</th>
-                <th className="px-8 py-5">Tipo</th>
+                <th className="px-8 py-5">Ativo/Descrição</th>
                 <th className="px-8 py-5 text-right">Investido</th>
                 <th className="px-8 py-5 text-right">Atual</th>
                 <th className="px-8 py-5 text-center">Rend.</th>
@@ -377,7 +377,12 @@ const Investimentos: React.FC<{ user: User }> = ({ user }) => {
                   return (
                     <tr key={inv.id} className="hover:bg-surface-highlight/10 transition-colors">
                       <td className="px-8 py-5 font-bold text-white text-sm">{inv.company?.name || '-'}</td>
-                      <td className="px-8 py-5 font-bold text-white text-sm">{inv.bank?.name || '-'}</td>
+                      <td className="px-8 py-5">
+                        <div className="flex flex-col">
+                          <span className="font-bold text-white text-sm">{inv.bank?.name || '-'}</span>
+                          <span className="text-[10px] text-[#9db9a6] font-bold uppercase">Ag: {inv.bank?.agency} Ct: {inv.bank?.account_number}</span>
+                        </div>
+                      </td>
                       <td className="px-8 py-5 text-[#9db9a6] text-xs font-bold uppercase">{inv.description}</td>
                       <td className="px-8 py-5 text-right text-[#9db9a6] text-sm">
                         {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(inv.amount)}
@@ -402,23 +407,27 @@ const Investimentos: React.FC<{ user: User }> = ({ user }) => {
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                          <button
-                            onClick={() => {
-                              openEdit(inv, false);
-                              window.scrollTo({ top: 0, behavior: 'smooth' });
-                            }}
-                            className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
-                            title="Editar"
-                          >
-                            <Edit3 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(inv.id, inv.description)}
-                            className="p-2 text-slate-400 hover:text-danger hover:bg-danger/10 rounded-lg transition-all"
-                            title="Excluir"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {(user.role === 'MASTER_ADMIN' || user.role === 'ADMIN') && (
+                            <>
+                              <button
+                                onClick={() => {
+                                  openEdit(inv);
+                                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                                }}
+                                className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all"
+                                title="Editar"
+                              >
+                                <Edit3 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(inv.id, inv.description)}
+                                className="p-2 text-slate-400 hover:text-danger hover:bg-danger/10 rounded-lg transition-all"
+                                title="Excluir"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
