@@ -3,9 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User } from '../types';
 import { supabase } from '../lib/supabase';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isSameMonth, isToday, parseISO } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isToday, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, PlusCircle, TrendingDown, TrendingUp, Landmark, Clock, Calendar as CalendarIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, PlusCircle, TrendingDown, TrendingUp, Landmark, Clock, Calendar as CalendarIcon, X } from 'lucide-react';
 
 interface CalendarItem {
   title: string;
@@ -46,6 +46,7 @@ const Schedule: React.FC<{ user: User }> = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [payables, setPayables] = useState<any[]>([]);
   const [receivables, setReceivables] = useState<any[]>([]);
+  const [showTypeSelect, setShowTypeSelect] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -87,7 +88,6 @@ const Schedule: React.FC<{ user: User }> = ({ user }) => {
   const startDay = getDay(startOfMonth(currentDate));
   const calendarDays = [];
 
-  // Previous month paddings
   const prevMonthEnd = endOfMonth(subMonths(currentDate, 1));
   for (let i = startDay - 1; i >= 0; i--) {
     calendarDays.push({
@@ -96,12 +96,10 @@ const Schedule: React.FC<{ user: User }> = ({ user }) => {
     });
   }
 
-  // Current month days
   daysInMonth.forEach(date => {
     calendarDays.push({ date, isOtherMonth: false });
   });
 
-  // Next month paddings
   const remaining = 42 - calendarDays.length;
   for (let i = 1; i <= remaining; i++) {
     calendarDays.push({
@@ -121,6 +119,50 @@ const Schedule: React.FC<{ user: User }> = ({ user }) => {
 
   return (
     <div className="p-6 lg:p-10 space-y-10 max-w-[1600px] mx-auto">
+      {/* Type Selection Modal */}
+      {showTypeSelect && (
+        <div className="fixed inset-0 bg-background-dark/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-surface-dark border border-surface-highlight rounded-3xl p-8 max-w-sm w-full shadow-2xl animate-in zoom-in duration-200">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-white font-black text-lg uppercase tracking-tight">Novo Agendamento</h3>
+              <button
+                onClick={() => setShowTypeSelect(false)}
+                className="p-2 hover:bg-surface-highlight rounded-xl text-[#9db9a6] hover:text-white transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <button
+                onClick={() => navigate('/pagar')}
+                className="w-full p-6 bg-danger/10 border border-danger/20 rounded-2xl flex items-center gap-4 hover:bg-danger/20 transition-all group text-left"
+              >
+                <div className="p-3 bg-danger/20 rounded-xl text-danger group-hover:scale-110 transition-transform">
+                  <TrendingDown className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-white font-black text-sm uppercase tracking-widest">Contas a Pagar</p>
+                  <p className="text-[#9db9a6] text-[10px] font-bold mt-0.5">Clique para adicionar uma despesa</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => navigate('/receber')}
+                className="w-full p-6 bg-blue-500/10 border border-blue-500/20 rounded-2xl flex items-center gap-4 hover:bg-blue-500/20 transition-all group text-left"
+              >
+                <div className="p-3 bg-blue-500/20 rounded-xl text-blue-400 group-hover:scale-110 transition-transform">
+                  <TrendingUp className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-white font-black text-sm uppercase tracking-widest">Contas a Receber</p>
+                  <p className="text-[#9db9a6] text-[10px] font-bold mt-0.5">Clique para adicionar uma receita</p>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-8">
         <div>
           <p className="text-[#9db9a6] text-sm font-medium mb-1">Planejamento de Caixa</p>
@@ -141,7 +183,7 @@ const Schedule: React.FC<{ user: User }> = ({ user }) => {
             </button>
           </div>
           <button
-            onClick={() => navigate('/pagar')}
+            onClick={() => setShowTypeSelect(true)}
             className="ml-auto xl:ml-0 px-6 py-2.5 bg-primary text-background-dark font-black rounded-xl text-sm flex items-center gap-2 shadow-lg shadow-primary/20"
           >
             <PlusCircle className="w-5 h-5" /> Novo Agendamento
