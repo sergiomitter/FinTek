@@ -297,7 +297,7 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
               className="pl-11 pr-4 h-12 rounded-xl border border-slate-200 dark:border-surface-highlight bg-white dark:bg-surface-dark text-slate-900 dark:text-white text-sm font-bold w-64 focus:ring-2 focus:ring-primary outline-none transition-all"
             />
           </div>
-          {user.role === 'MASTER_ADMIN' && (
+          {(user.role === 'MASTER_ADMIN' || user.role === 'ADMIN') && (
             <button
               onClick={() => {
                 if (showForm && !editingId) setShowForm(false);
@@ -532,7 +532,7 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
                   <th className="px-8 py-5">Nome Fantasia / Razão Social</th>
                   <th className="px-8 py-5">CNPJ</th>
                   <th className="px-8 py-5">E-mail</th>
-                  {user.role === 'MASTER_ADMIN' && <th className="px-8 py-5 text-center">Ações</th>}
+                  {(user.role === 'MASTER_ADMIN' || user.role === 'ADMIN') && <th className="px-8 py-5 text-center">Ações</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-surface-highlight">
@@ -546,7 +546,7 @@ const CompanyReg: React.FC<{ user: User }> = ({ user }) => {
                     </td>
                     <td className="px-8 py-5 text-sm font-bold text-slate-600 dark:text-slate-300 whitespace-nowrap">{company.cnpj}</td>
                     <td className="px-8 py-5 text-sm font-bold text-slate-600 dark:text-slate-300">{company.email}</td>
-                    {user.role === 'MASTER_ADMIN' && (
+                    {(user.role === 'MASTER_ADMIN' || user.role === 'ADMIN') && (
                       <td className="px-8 py-5">
                         <div className="flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
                           <button

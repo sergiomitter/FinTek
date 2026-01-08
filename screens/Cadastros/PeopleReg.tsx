@@ -152,7 +152,7 @@ const PeopleReg: React.FC<{ user: User }> = ({ user }) => {
           <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Pessoas</h1>
           <p className="text-slate-600 dark:text-text-secondary text-base font-medium">Gestão de cadastros de pessoas físicas.</p>
         </div>
-        {user.role === 'MASTER_ADMIN' && (
+        {(user.role === 'MASTER_ADMIN' || user.role === 'ADMIN') && (
           <button
             onClick={() => {
               setEditingId(null);
@@ -234,9 +234,9 @@ const PeopleReg: React.FC<{ user: User }> = ({ user }) => {
                     </td>
                     <td className="px-6 py-5">
                       <button
-                        onClick={() => user.role === 'MASTER_ADMIN' && handleToggleActive(p.id, p.is_active)}
+                        onClick={() => (user.role === 'MASTER_ADMIN' || user.role === 'ADMIN') && handleToggleActive(p.id, p.is_active)}
                         className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all ${p.is_active ? 'bg-success/10 text-success hover:bg-success/20' : 'bg-danger/10 text-danger hover:bg-danger/20'}`}
-                        disabled={user.role !== 'MASTER_ADMIN'}
+                        disabled={user.role !== 'MASTER_ADMIN' && user.role !== 'ADMIN'}
                       >
                         {p.is_active ? <ShieldCheck className="w-3 h-3" /> : <ShieldAlert className="w-3 h-3" />}
                         {p.is_active ? 'Ativo' : 'Bloqueado'}
