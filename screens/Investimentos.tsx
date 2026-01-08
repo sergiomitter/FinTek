@@ -18,15 +18,18 @@ import {
 
 interface Investment {
   id: string;
-  company_id: string;
+  company_id: string | null;
+  person_id: string | null;
   bank_id: string;
   description: string;
   amount: number;
   current_value: number;
   is_active: boolean;
+  type: 'INVESTMENT' | 'CASH';
   created_at: string;
   company?: { name: string };
-  bank?: { name: string; account_type: string };
+  person?: { name: string; nickname: string };
+  bank?: { name: string; account_type: string; agency: string; account_number: string };
 }
 
 const Investimentos: React.FC<{ user: User }> = ({ user }) => {
@@ -41,7 +44,8 @@ const Investimentos: React.FC<{ user: User }> = ({ user }) => {
   const [isViewOnly, setIsViewOnly] = useState(false);
 
   const [formData, setFormData] = useState({
-    company_id: '',
+    type: 'INVESTMENT' as 'INVESTMENT' | 'CASH',
+    owner_id: '', // Combined id for company or person
     bank_id: '',
     description: '',
     amount: '',
@@ -72,7 +76,9 @@ const Investimentos: React.FC<{ user: User }> = ({ user }) => {
     // Fetch people for nicknames
     const { data: peopleData } = await supabase
       .from('people')
-      .select('name, nickname, cpf');
+      .select('id, name, nickname, cpf')
+      .eq('is_active', true)
+      .order('name');
 
     // Fetch investments with joins
     const { data: investmentsData } = await supabase
@@ -96,12 +102,15 @@ const Investimentos: React.FC<{ user: User }> = ({ user }) => {
     e.preventDefault();
     setSaving(true);
 
+    const isPerson = people.some(p => p.id === formData.owner_id);
     const payload = {
-      company_id: formData.company_id,
+      type: formData.type,
+      company_id: isPerson ? null : formData.owner_id,
+      person_id: isPerson ? formData.owner_id : null,
       bank_id: formData.bank_id,
       description: formData.description,
-      amount: parseFloat(formData.amount),
-      current_value: parseFloat(formData.current_value),
+      amount: formData.type === 'CASH' ? (parseFloat(formData.current_value) || 0) : (parseFloat(formData.amount) || 0),
+      current_value: parseFloat(formData.current_value) || 0,
       is_active: true
     };
 
@@ -122,7 +131,7 @@ const Investimentos: React.FC<{ user: User }> = ({ user }) => {
     } else {
       setShowForm(false);
       setEditingId(null);
-      setFormData({ company_id: '', bank_id: '', description: '', amount: '', current_value: '' });
+      setFormData({ type: 'INVESTMENT', owner_id: '', bank_id: '', description: '', amount: '', current_value: '' });
       fetchData();
     }
     setSaving(false);
@@ -147,7 +156,8 @@ const Investimentos: React.FC<{ user: User }> = ({ user }) => {
     setEditingId(investment.id);
     setIsViewOnly(viewOnly);
     setFormData({
-      company_id: investment.company_id || '',
+      type: (investment.type as any) || 'INVESTMENT',
+      owner_id: investment.company_id || investment.person_id || '',
       bank_id: investment.bank_id || '',
       description: investment.description || '',
       amount: investment.amount.toString(),
@@ -184,7 +194,7 @@ const Investimentos: React.FC<{ user: User }> = ({ user }) => {
               else {
                 setEditingId(null);
                 setIsViewOnly(false);
-                setFormData({ company_id: '', bank_id: '', description: '', amount: '', current_value: '' });
+                setFormData({ type: 'INVESTMENT', owner_id: '', bank_id: '', description: '', amount: '', current_value: '' });
                 setShowForm(true);
               }
             }}
@@ -246,9 +256,13 @@ const Investimentos: React.FC<{ user: User }> = ({ user }) => {
                 investments.map((inv) => {
                   const profit = inv.current_value - inv.amount;
                   const profitPct = inv.amount > 0 ? ((profit / inv.amount) * 100).toFixed(1) : '0.0';
+
+                  // Find owner name (Company or Person) correctly
+                  const ownerName = inv.company?.name || inv.person?.nickname || inv.person?.name || inv.bank?.owner_name || '-';
+
                   return (
                     <tr key={inv.id} className="hover:bg-surface-highlight/10 transition-colors">
-                      <td className="px-8 py-5 font-bold text-white text-sm">{inv.company?.name || '-'}</td>
+                      <td className="px-8 py-5 font-bold text-white text-sm">{ownerName}</td>
                       <td className="px-8 py-5">
                         <div className="flex flex-col">
                           <span className="font-bold text-white text-sm">{inv.bank?.name || '-'}</span>
@@ -320,21 +334,47 @@ const Investimentos: React.FC<{ user: User }> = ({ user }) => {
             </h3>
           </div>
           <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 items-end">
+            <div className="lg:col-span-12 mb-4">
+              <div className="flex bg-surface-darker p-1 rounded-xl w-fit border border-surface-highlight">
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, type: 'INVESTMENT' }))}
+                  className={`px-6 py-2 rounded-lg text-xs font-black transition-all ${formData.type === 'INVESTMENT' ? 'bg-primary text-background-dark' : 'text-[#9db9a6] hover:text-white'}`}
+                >
+                  INVESTIMENTO
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, type: 'CASH' }))}
+                  className={`px-6 py-2 rounded-lg text-xs font-black transition-all ${formData.type === 'CASH' ? 'bg-primary text-background-dark' : 'text-[#9db9a6] hover:text-white'}`}
+                >
+                  CONTA CORRENTE
+                </button>
+              </div>
+            </div>
+
             <div className="lg:col-span-2 space-y-3">
-              <label className="text-[10px] font-black text-[#9db9a6] uppercase tracking-[0.2em] ml-1">Empresa</label>
+              <label className="text-[10px] font-black text-[#9db9a6] uppercase tracking-[0.2em] ml-1">Empresa/Pessoa</label>
               <div className="relative group">
                 <select
                   required
                   disabled={isViewOnly}
-                  title="Selecione a empresa"
-                  value={formData.company_id}
-                  onChange={(e) => setFormData(prev => ({ ...prev, company_id: e.target.value }))}
+                  title="Selecione a empresa ou pessoa"
+                  value={formData.owner_id}
+                  onChange={(e) => setFormData(prev => ({ ...prev, owner_id: e.target.value }))}
                   className="w-full h-12 bg-surface-darker border border-surface-highlight rounded-xl px-4 text-white text-sm focus:border-primary/50 transition-all outline-none appearance-none disabled:opacity-50"
                 >
                   <option value="">Selecione...</option>
-                  {companies.map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
+                  <optgroup label="Empresas">
+                    {companies.map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Pessoas">
+                    {people.map(p => (
+                      <option key={p.id} value={p.id}>{p.nickname || p.name}</option>
+                    ))}
+                  </optgroup>
                 </select>
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#9db9a6]">
                   <TrendingUp className="w-4 h-4 opacity-20" />
@@ -378,22 +418,24 @@ const Investimentos: React.FC<{ user: User }> = ({ user }) => {
               />
             </div>
 
-            <div className="lg:col-span-2 space-y-3">
-              <label className="text-[10px] font-black text-[#9db9a6] uppercase tracking-[0.2em] ml-1">Vlr Aplicado</label>
-              <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9db9a6] text-xs font-bold">R$</div>
-                <input
-                  type="number"
-                  step="0.01"
-                  required
-                  disabled={isViewOnly}
-                  value={formData.amount}
-                  onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
-                  className="w-full h-12 bg-surface-darker border border-surface-highlight rounded-xl pl-10 pr-4 text-white text-sm focus:border-primary/50 transition-all outline-none disabled:opacity-50"
-                  placeholder="0,00"
-                />
+            {formData.type === 'INVESTMENT' && (
+              <div className="lg:col-span-2 space-y-3">
+                <label className="text-[10px] font-black text-[#9db9a6] uppercase tracking-[0.2em] ml-1">Vlr Aplicado</label>
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9db9a6] text-xs font-bold">R$</div>
+                  <input
+                    type="number"
+                    step="0.01"
+                    required
+                    disabled={isViewOnly}
+                    value={formData.amount}
+                    onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                    className="w-full h-12 bg-surface-darker border border-surface-highlight rounded-xl pl-10 pr-4 text-white text-sm focus:border-primary/50 transition-all outline-none disabled:opacity-50"
+                    placeholder="0,00"
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="lg:col-span-2 space-y-3">
               <label className="text-[10px] font-black text-[#9db9a6] uppercase tracking-[0.2em] ml-1">Vlr Atual</label>

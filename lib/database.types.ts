@@ -86,134 +86,75 @@ export type Database = {
                         isOneToOne: false
                         referencedRelation: "companies"
                         referencedColumns: ["id"]
-                    },
+                    }
                 ]
             }
             companies: {
                 Row: {
+                    city: string | null
                     cnpj: string | null
                     created_at: string | null
-                    email: string | null
-                    id: string
-                    name: string
-                    razao_social: string | null
-                }
-                Insert: {
-                    cnpj?: string | null
-                    created_at?: string | null
-                    email?: string | null
-                    id?: string
-                    name: string
-                    razao_social?: string | null
-                }
-                Update: {
-                    cnpj?: string | null
-                    created_at?: string | null
-                    email?: string | null
-                    id?: string
-                    name?: string
-                    razao_social?: string | null
-                }
-                Relationships: []
-            }
-            company_partners: {
-                Row: {
-                    company_id: string | null
-                    cpf: string | null
-                    created_at: string | null
-                    id: string
-                    name: string | null
-                    participation_percentage: number | null
-                }
-                Insert: {
-                    company_id?: string | null
-                    cpf?: string | null
-                    created_at?: string | null
-                    id?: string
-                    name?: string | null
-                    participation_percentage?: number | null
-                }
-                Update: {
-                    company_id?: string | null
-                    cpf?: string | null
-                    created_at?: string | null
-                    id?: string
-                    name?: string | null
-                    participation_percentage?: number | null
-                }
-                Relationships: [
-                    {
-                        foreignKeyName: "company_partners_company_id_fkey"
-                        columns: ["company_id"]
-                        isOneToOne: false
-                        referencedRelation: "companies"
-                        referencedColumns: ["id"]
-                    },
-                ]
-            }
-            customers: {
-                Row: {
-                    cnpj: string | null
-                    created_at: string | null
-                    email: string | null
                     id: string
                     is_active: boolean | null
                     name: string
-                    razao_social: string | null
-                    trade_name: string | null
+                    state: string | null
                 }
                 Insert: {
+                    city?: string | null
                     cnpj?: string | null
                     created_at?: string | null
-                    email?: string | null
                     id?: string
                     is_active?: boolean | null
                     name: string
-                    razao_social?: string | null
-                    trade_name?: string | null
+                    state?: string | null
                 }
                 Update: {
+                    city?: string | null
                     cnpj?: string | null
                     created_at?: string | null
-                    email?: string | null
                     id?: string
                     is_active?: boolean | null
                     name?: string
-                    razao_social?: string | null
-                    trade_name?: string | null
+                    state?: string | null
                 }
                 Relationships: []
             }
             investments: {
                 Row: {
-                    amount: number | null
+                    amount: number
                     bank_id: string | null
                     company_id: string | null
                     created_at: string | null
-                    current_value: number | null
+                    current_value: number
                     description: string | null
                     id: string
                     is_active: boolean | null
+                    person_id: string | null
+                    type: string | null
                 }
                 Insert: {
-                    amount?: number | null
+                    amount: number
                     bank_id?: string | null
                     company_id?: string | null
                     created_at?: string | null
-                    current_value?: number | null
+                    current_value: number
                     description?: string | null
                     id?: string
                     is_active?: boolean | null
+                    person_id?: string | null
+                    type?: string | null
                 }
                 Update: {
-                    amount?: number | null
+                    amount?: number
                     bank_id?: string | null
                     company_id?: string | null
                     created_at?: string | null
-                    current_value?: number | null
+                    current_value?: number
                     description?: string | null
                     id?: string
                     is_active?: boolean | null
+                    person_id?: string | null
+                    type?: string | null
                 }
                 Relationships: [
                     {
@@ -230,249 +171,48 @@ export type Database = {
                         referencedRelation: "companies"
                         referencedColumns: ["id"]
                     },
-                ]
-            }
-            payables: {
-                Row: {
-                    amount: number
-                    bank_id: string | null
-                    company_id: string | null
-                    created_at: string | null
-                    description: string
-                    due_date: string
-                    id: string
-                    payment_date: string | null
-                    status: string | null
-                    supplier_id: string | null
-                    user_id: string | null
-                }
-                Insert: {
-                    amount: number
-                    bank_id?: string | null
-                    company_id?: string | null
-                    created_at?: string | null
-                    description: string
-                    due_date: string
-                    id?: string
-                    payment_date?: string | null
-                    status?: string | null
-                    supplier_id?: string | null
-                    user_id?: string | null
-                }
-                Update: {
-                    amount?: number
-                    bank_id?: string | null
-                    company_id?: string | null
-                    created_at?: string | null
-                    description?: string
-                    due_date?: string
-                    id?: string
-                    payment_date?: string | null
-                    status?: string | null
-                    supplier_id?: string | null
-                    user_id?: string | null
-                }
-                Relationships: [
                     {
-                        foreignKeyName: "payables_bank_id_fkey"
-                        columns: ["bank_id"]
+                        foreignKeyName: "investments_person_id_fkey"
+                        columns: ["person_id"]
                         isOneToOne: false
-                        referencedRelation: "banks"
+                        referencedRelation: "people"
                         referencedColumns: ["id"]
-                    },
-                    {
-                        foreignKeyName: "payables_company_id_fkey"
-                        columns: ["company_id"]
-                        isOneToOne: false
-                        referencedRelation: "companies"
-                        referencedColumns: ["id"]
-                    },
-                    {
-                        foreignKeyName: "payables_supplier_id_fkey"
-                        columns: ["supplier_id"]
-                        isOneToOne: false
-                        referencedRelation: "suppliers"
-                        referencedColumns: ["id"]
-                    },
-                    {
-                        foreignKeyName: "payables_user_id_fkey"
-                        columns: ["user_id"]
-                        isOneToOne: false
-                        referencedRelation: "profiles"
-                        referencedColumns: ["id"]
-                    },
+                    }
                 ]
             }
             people: {
                 Row: {
+                    city: string | null
                     cpf: string | null
                     created_at: string | null
-                    email: string | null
                     id: string
                     is_active: boolean | null
                     name: string
                     nickname: string | null
+                    phone: string | null
+                    state: string | null
                 }
                 Insert: {
+                    city?: string | null
                     cpf?: string | null
                     created_at?: string | null
-                    email?: string | null
                     id?: string
                     is_active?: boolean | null
                     name: string
                     nickname?: string | null
+                    phone?: string | null
+                    state?: string | null
                 }
                 Update: {
+                    city?: string | null
                     cpf?: string | null
                     created_at?: string | null
-                    email?: string | null
                     id?: string
                     is_active?: boolean | null
                     name?: string
                     nickname?: string | null
-                }
-                Relationships: []
-            }
-            profiles: {
-                Row: {
-                    avatar_url: string | null
-                    created_at: string | null
-                    email: string
-                    failed_attempts: number | null
-                    id: string
-                    is_blocked: boolean | null
-                    is_first_access: boolean | null
-                    nome: string | null
-                    role: string | null
-                    status: string | null
-                }
-                Insert: {
-                    avatar_url?: string | null
-                    created_at?: string | null
-                    email: string
-                    failed_attempts?: number | null
-                    id: string
-                    is_blocked?: boolean | null
-                    is_first_access?: boolean | null
-                    nome?: string | null
-                    role?: string | null
-                    status?: string | null
-                }
-                Update: {
-                    avatar_url?: string | null
-                    created_at?: string | null
-                    email?: string
-                    failed_attempts?: number | null
-                    id?: string
-                    is_blocked?: boolean | null
-                    is_first_access?: boolean | null
-                    nome?: string | null
-                    role?: string | null
-                    status?: string | null
-                }
-                Relationships: []
-            }
-            receivables: {
-                Row: {
-                    amount: number
-                    bank_id: string | null
-                    company_id: string | null
-                    created_at: string | null
-                    customer_id: string | null
-                    description: string
-                    due_date: string
-                    id: string
-                    received_date: string | null
-                    status: string | null
-                    user_id: string | null
-                }
-                Insert: {
-                    amount: number
-                    bank_id?: string | null
-                    company_id?: string | null
-                    created_at?: string | null
-                    customer_id?: string | null
-                    description: string
-                    due_date: string
-                    id?: string
-                    received_date?: string | null
-                    status?: string | null
-                    user_id?: string | null
-                }
-                Update: {
-                    amount?: number
-                    bank_id?: string | null
-                    company_id?: string | null
-                    created_at?: string | null
-                    customer_id?: string | null
-                    description?: string
-                    due_date?: string
-                    id?: string
-                    received_date?: string | null
-                    status?: string | null
-                    user_id?: string | null
-                }
-                Relationships: [
-                    {
-                        foreignKeyName: "receivables_bank_id_fkey"
-                        columns: ["bank_id"]
-                        isOneToOne: false
-                        referencedRelation: "banks"
-                        referencedColumns: ["id"]
-                    },
-                    {
-                        foreignKeyName: "receivables_company_id_fkey"
-                        columns: ["company_id"]
-                        isOneToOne: false
-                        referencedRelation: "companies"
-                        referencedColumns: ["id"]
-                    },
-                    {
-                        foreignKeyName: "receivables_customer_id_fkey"
-                        columns: ["customer_id"]
-                        isOneToOne: false
-                        referencedRelation: "customers"
-                        referencedColumns: ["id"]
-                    },
-                    {
-                        foreignKeyName: "receivables_user_id_fkey"
-                        columns: ["user_id"]
-                        isOneToOne: false
-                        referencedRelation: "profiles"
-                        referencedColumns: ["id"]
-                    },
-                ]
-            }
-            suppliers: {
-                Row: {
-                    cnpj: string | null
-                    created_at: string | null
-                    email: string | null
-                    id: string
-                    is_active: boolean | null
-                    name: string
-                    razao_social: string | null
-                    trade_name: string | null
-                }
-                Insert: {
-                    cnpj?: string | null
-                    created_at?: string | null
-                    email?: string | null
-                    id?: string
-                    is_active?: boolean | null
-                    name: string
-                    razao_social?: string | null
-                    trade_name?: string | null
-                }
-                Update: {
-                    cnpj?: string | null
-                    created_at?: string | null
-                    email?: string | null
-                    id?: string
-                    is_active?: boolean | null
-                    name?: string
-                    razao_social?: string | null
-                    trade_name?: string | null
+                    phone?: string | null
+                    state?: string | null
                 }
                 Relationships: []
             }
