@@ -32,6 +32,7 @@ const Payable: React.FC<{ user: User }> = ({ user }) => {
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
 
   // Modals state
   const [isExportOpen, setIsExportOpen] = useState(false);
@@ -181,7 +182,7 @@ const Payable: React.FC<{ user: User }> = ({ user }) => {
   };
 
   return (
-    <div className="p-6 lg:p-10 space-y-10 max-w-7xl mx-auto">
+    <div className="p-6 lg:p-10 space-y-10 w-full">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="flex flex-col gap-1">
           <h1 className="text-slate-900 dark:text-white text-4xl font-black tracking-tight">Contas a Pagar</h1>
@@ -198,14 +199,24 @@ const Payable: React.FC<{ user: User }> = ({ user }) => {
               className="pl-11 pr-4 h-12 rounded-xl border border-slate-200 dark:border-surface-highlight bg-white dark:bg-surface-dark text-slate-900 dark:text-white text-sm font-bold w-64 focus:ring-2 focus:ring-primary outline-none transition-all"
             />
           </div>
-          {!isReadOnly && (
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setIsExportOpen(true)}
-              className="flex items-center gap-2 px-6 h-12 rounded-xl bg-primary hover:bg-primary-hover transition text-background-dark text-sm font-black shadow-lg shadow-primary/20"
+              className="flex items-center gap-2 px-6 h-12 bg-white dark:bg-surface-dark border border-slate-200 dark:border-surface-highlight rounded-xl text-slate-700 dark:text-white text-sm font-black hover:bg-slate-50 dark:hover:bg-surface-highlight transition-all shadow-sm"
             >
-              <Download className="w-4 h-4" /> Exportar
+              <Download className="w-4 h-4" />
+              Exportar
             </button>
-          )}
+            {!isReadOnly && (
+              <button
+                onClick={() => setShowForm(!showForm)}
+                className={`flex items-center gap-2 px-6 h-12 rounded-xl transition-all text-sm font-black shadow-lg ${showForm ? 'bg-slate-200 dark:bg-surface-highlight text-slate-700 dark:text-white' : 'bg-primary hover:bg-primary-hover text-background-dark shadow-primary/20'}`}
+              >
+                {showForm ? <X className="w-4 h-4" /> : <PlusCircle className="w-4 h-4" />}
+                {showForm ? 'Fechar Lançamento' : 'Incluir Novo Lançamento'}
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -259,97 +270,115 @@ const Payable: React.FC<{ user: User }> = ({ user }) => {
         </div>
       </div>
 
-      <div className={`bg-white dark:bg-surface-dark border border-slate-200 dark:border-surface-highlight rounded-2xl p-8 shadow-sm ${isReadOnly ? 'opacity-50 pointer-events-none' : ''}`}>
-        <div className="flex items-center gap-3 mb-8 border-b border-slate-200 dark:border-surface-highlight pb-6">
-          <PlusCircle className="text-primary w-8 h-8" />
-          <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Novo Lançamento</h3>
-        </div>
-        <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 items-end">
-          <div className="lg:col-span-4 flex flex-col gap-2">
-            <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Descrição</label>
-            <input
-              required
-              className="w-full bg-slate-50 dark:bg-surface-darker border border-slate-200 dark:border-surface-highlight rounded-xl h-12 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold placeholder-slate-400"
-              placeholder="Ex: Aluguel do escritório central"
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-            />
+      {showForm && !isReadOnly && (
+        <div className="bg-white dark:bg-surface-dark border border-slate-200 dark:border-surface-highlight rounded-2xl p-8 shadow-sm animate-in slide-in-from-top-4 duration-300">
+          <div className="flex items-center gap-3 mb-8 border-b border-slate-200 dark:border-surface-highlight pb-6">
+            <PlusCircle className="text-primary w-8 h-8" />
+            <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Novo Lançamento</h3>
           </div>
-          <div className="lg:col-span-4 flex flex-col gap-2">
-            <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Fornecedor</label>
-            <select
-              required
-              className="w-full bg-slate-50 dark:bg-[#111813] border border-slate-200 dark:border-surface-highlight rounded-xl h-12 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold appearance-none"
-              value={supplierId}
-              onChange={e => setSupplierId(e.target.value)}
-            >
-              <option value="" disabled>Selecione o fornecedor...</option>
-              {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
-          </div>
-          <div className="lg:col-span-4 flex flex-col gap-2">
-            <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Empresa</label>
-            <select
-              required
-              className="w-full bg-slate-50 dark:bg-[#111813] border border-slate-200 dark:border-surface-highlight rounded-xl h-12 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold appearance-none"
-              value={companyId}
-              onChange={e => setCompanyId(e.target.value)}
-            >
-              <option value="" disabled>Selecione a empresa...</option>
-              {companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-          </div>
+          <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 items-end">
+            <div className="lg:col-span-12 flex flex-col gap-2">
+              <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Descrição do Lançamento</label>
+              <input
+                required
+                className="w-full bg-slate-50 dark:bg-[#111813] border border-slate-200 dark:border-surface-highlight rounded-xl h-12 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold"
+                placeholder="Ex: Aluguel, Internet, Fornecedor X..."
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+              />
+            </div>
 
-          <div className="lg:col-span-4 flex flex-col gap-2">
-            <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Banco / Conta para Débito</label>
-            <select
-              required
-              className="w-full bg-slate-50 dark:bg-[#111813] border border-slate-200 dark:border-surface-highlight rounded-xl h-12 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold appearance-none"
-              value={bankId}
-              onChange={e => setBankId(e.target.value)}
-            >
-              <option value="" disabled>Selecione a conta bancária...</option>
-              {banks.map(b => {
-                const ownerDisplay = b.company?.name || (people.find(p => p.cpf === b.owner_document)?.nickname || b.owner_name);
-                return (
-                  <option key={b.id} value={b.id}>
-                    {ownerDisplay ? `${ownerDisplay} - ` : ''}{b.name} (Ag: {b.agency} Ct: {b.account_number})
-                  </option>
-                );
-              })}
-            </select>
-          </div>
-          <div className="lg:col-span-3 flex flex-col gap-2">
-            <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Data de Vencimento</label>
-            <input
-              type="date"
-              className="w-full bg-slate-50 dark:bg-[#111813] border border-slate-200 dark:border-surface-highlight rounded-xl h-12 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold"
-              value={dueDate}
-              onChange={e => setDueDate(e.target.value)}
-            />
-          </div>
-          <div className="lg:col-span-2 flex flex-col gap-2">
-            <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Valor (R$)</label>
-            <input
-              required
-              className="w-full bg-slate-50 dark:bg-[#111813] border border-slate-200 dark:border-surface-highlight rounded-xl h-12 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary text-right font-black"
-              placeholder="0,00"
-              value={amount}
-              onChange={e => setAmount(e.target.value)}
-            />
-          </div>
-          <div className="lg:col-span-3">
-            <button
-              type="submit"
-              disabled={saving}
-              className="w-full h-12 bg-primary hover:bg-primary-hover text-background-dark font-black rounded-xl transition shadow-lg shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              <PlusCircle className={`w-5 h-5 ${saving ? 'animate-spin' : ''}`} />
-              {saving ? 'Salvando...' : 'Salvar Lançamento'}
-            </button>
-          </div>
-        </form>
-      </div>
+            <div className="lg:col-span-4 flex flex-col gap-2">
+              <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Fornecedor</label>
+              <select
+                required
+                className="w-full bg-slate-50 dark:bg-[#111813] border border-slate-200 dark:border-surface-highlight rounded-xl h-12 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold appearance-none"
+                value={supplierId}
+                onChange={e => setSupplierId(e.target.value)}
+                title="Selecione o fornecedor"
+              >
+                <option value="" disabled>Selecione o fornecedor...</option>
+                {suppliers.map(s => (
+                  <option key={s.id} value={s.id}>{(s as SupplierExtended).trade_name || s.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="lg:col-span-4 flex flex-col gap-2">
+              <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Empresa / Destino</label>
+              <select
+                required
+                className="w-full bg-slate-50 dark:bg-[#111813] border border-slate-200 dark:border-surface-highlight rounded-xl h-12 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold appearance-none"
+                value={companyId}
+                onChange={e => setCompanyId(e.target.value)}
+                title="Selecione a empresa"
+              >
+                <option value="" disabled>Selecione a empresa...</option>
+                {companies.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="lg:col-span-4 flex flex-col gap-2">
+              <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Banco / Conta para Débito</label>
+              <select
+                required
+                className="w-full bg-slate-50 dark:bg-[#111813] border border-slate-200 dark:border-surface-highlight rounded-xl h-12 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold appearance-none"
+                value={bankId}
+                onChange={e => setBankId(e.target.value)}
+                title="Selecione o banco"
+              >
+                <option value="" disabled>Selecione a conta bancária...</option>
+                {banks.map(b => {
+                  const ownerDisplay = b.company?.name || (people.find(p => p.cpf === b.owner_document)?.nickname || b.owner_name);
+                  return (
+                    <option key={b.id} value={b.id}>
+                      {ownerDisplay ? `${ownerDisplay} - ` : ''}{b.name} (Ag: {b.agency} Ct: {b.account_number})
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+            <div className="lg:col-span-3 flex flex-col gap-2">
+              <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Data de Vencimento</label>
+              <input
+                type="date"
+                className="w-full bg-slate-50 dark:bg-[#111813] border border-slate-200 dark:border-surface-highlight rounded-xl h-12 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold"
+                value={dueDate}
+                onChange={e => setDueDate(e.target.value)}
+              />
+            </div>
+            <div className="lg:col-span-2 flex flex-col gap-2">
+              <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Valor (R$)</label>
+              <input
+                required
+                className="w-full bg-slate-50 dark:bg-[#111813] border border-slate-200 dark:border-surface-highlight rounded-xl h-12 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary text-right font-black"
+                placeholder="0,00"
+                value={amount}
+                onChange={e => setAmount(e.target.value)}
+              />
+            </div>
+            <div className="lg:col-span-7 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowForm(false)}
+                className="px-6 h-12 rounded-xl text-slate-500 font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={saving}
+                className="px-10 h-12 bg-primary hover:bg-primary-hover text-background-dark font-black rounded-xl transition shadow-lg shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                <PlusCircle className={`w-5 h-5 ${saving ? 'animate-spin' : ''}`} />
+                {saving ? 'SALVANDO...' : 'CONFIRMAR LANÇAMENTO'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       <div className="bg-white dark:bg-surface-dark border border-slate-200 dark:border-surface-highlight rounded-2xl overflow-hidden shadow-sm">
         <div className="p-6 border-b border-slate-200 dark:border-surface-highlight flex flex-wrap justify-between items-center gap-6 bg-slate-50 dark:bg-surface-darker">
