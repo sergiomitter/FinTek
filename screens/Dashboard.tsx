@@ -457,22 +457,32 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
               <span className="text-[10px] font-black bg-slate-200 dark:bg-surface-highlight text-slate-700 dark:text-[#9db9a6] px-2 py-1 rounded-md uppercase tracking-wider">Ativos</span>
             </div>
             <div className="p-2">
-              {banks.map((bank, i) => (
-                <div key={bank.id} className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-surface-highlight rounded-xl transition-all cursor-pointer group">
-                  <div className="flex items-center gap-4">
-                    <div className={`size-10 rounded-full bg-slate-700 flex items-center justify-center text-white font-black text-xs border-2 border-white dark:border-white/10 shadow-sm group-hover:scale-110 transition-transform`}>
-                      {bank.name.substring(0, 2).toUpperCase()}
+              {(() => {
+                const normalize = (val: string | null) => val ? val.replace(/\D/g, '') : '';
+                return banks.map((bank, i) => {
+                  const companyOwner = companies.find(c => normalize(c.cnpj) === normalize(bank.owner_document));
+                  const personOwner = people.find(p => normalize(p.cpf) === normalize(bank.owner_document));
+
+                  const ownerDisplay = companyOwner?.name || bank.company?.name || personOwner?.nickname || bank.owner_name;
+
+                  return (
+                    <div key={bank.id} className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-surface-highlight rounded-xl transition-all cursor-pointer group">
+                      <div className="flex items-center gap-4">
+                        <div className={`size-10 rounded-full bg-slate-700 flex items-center justify-center text-white font-black text-xs border-2 border-white dark:border-white/10 shadow-sm group-hover:scale-110 transition-transform`}>
+                          {bank.name.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="text-slate-900 dark:text-white text-sm font-black">{bank.name}</p>
+                          <p className="text-slate-400 dark:text-text-secondary text-[10px] font-black uppercase tracking-wider">
+                            {ownerDisplay}
+                          </p>
+                        </div>
+                      </div>
+                      <p className="text-slate-900 dark:text-white font-black text-sm">-</p>
                     </div>
-                    <div>
-                      <p className="text-slate-900 dark:text-white text-sm font-black">{bank.name}</p>
-                      <p className="text-slate-400 dark:text-text-secondary text-[10px] font-black uppercase tracking-wider">
-                        {companies.find(c => c.cnpj === bank.owner_document)?.name || bank.company?.name || (people.find(p => p.cpf === bank.owner_document)?.nickname || bank.owner_name)}
-                      </p>
-                    </div>
-                  </div>
-                  <p className="text-slate-900 dark:text-white font-black text-sm">-</p>
-                </div>
-              ))}
+                  );
+                });
+              })()}
             </div>
           </div>
         </div>
