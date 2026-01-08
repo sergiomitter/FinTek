@@ -174,7 +174,7 @@ const Investimentos: React.FC<{ user: User }> = ({ user }) => {
     <div className="p-6 lg:p-10 space-y-10 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6 border-b border-surface-highlight">
         <div className="flex flex-col gap-2">
-          <h1 className="text-4xl font-black text-white tracking-tight">Carteira de Investimentos</h1>
+          <h1 className="text-4xl font-black text-white tracking-tight">Investimentos/Saldo bancário</h1>
           <p className="text-[#9db9a6] text-base font-normal">Acompanhe a rentabilidade e evolução do seu patrimônio.</p>
         </div>
         {(user.role === 'MASTER_ADMIN' || user.role === 'ADMIN') && (
@@ -190,54 +190,67 @@ const Investimentos: React.FC<{ user: User }> = ({ user }) => {
             }}
             className={`flex items-center gap-2 px-8 h-12 rounded-xl transition-all font-black text-sm shadow-lg ${showForm && !editingId ? 'bg-slate-200 text-slate-900' : 'bg-primary text-background-dark shadow-primary/20 hover:scale-[1.02]'}`}
           >
-            {showForm && !editingId ? <><X className="w-5 h-5" /> CANCELAR</> : <><Plus className="w-5 h-5" /> NOVO APORTE</>}
+            {showForm && !editingId ? <><X className="w-5 h-5" /> FECHAR INCLUSÃO</> : <><Plus className="w-5 h-5" /> NOVO LANÇAMENTO</>}
           </button>
         )}
       </div>
 
       {showForm && (user.role === 'MASTER_ADMIN' || user.role === 'ADMIN') && (
-        <div className="bg-surface-dark border border-surface-highlight rounded-2xl p-6 animate-in slide-in-from-top duration-300">
-          <form onSubmit={handleSave} className="flex flex-wrap items-end gap-4">
-            <div className="flex-1 min-w-[200px] space-y-2">
+        <div className="bg-surface-dark border border-surface-highlight rounded-2xl p-8 animate-in slide-in-from-top duration-300 shadow-xl">
+          <div className="flex items-center gap-3 mb-8 border-b border-surface-highlight pb-6">
+            <TrendingUp className="text-primary w-8 h-8" />
+            <h3 className="text-xl font-black text-white uppercase tracking-tight">
+              {editingId ? 'Editar Investimento' : 'Novo Lançamento'}
+            </h3>
+          </div>
+          <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 items-end">
+            <div className="lg:col-span-2 space-y-3">
               <label className="text-[10px] font-black text-[#9db9a6] uppercase tracking-[0.2em] ml-1">Empresa</label>
-              <select
-                required
-                disabled={isViewOnly}
-                title="Selecione a empresa"
-                value={formData.company_id}
-                onChange={(e) => setFormData(prev => ({ ...prev, company_id: e.target.value }))}
-                className="w-full h-12 bg-surface-darker border border-surface-highlight rounded-xl px-4 text-white text-sm focus:border-primary/50 transition-all outline-none appearance-none disabled:opacity-50"
-              >
-                <option value="">Selecione a empresa</option>
-                {companies.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
+              <div className="relative group">
+                <select
+                  required
+                  disabled={isViewOnly}
+                  title="Selecione a empresa"
+                  value={formData.company_id}
+                  onChange={(e) => setFormData(prev => ({ ...prev, company_id: e.target.value }))}
+                  className="w-full h-12 bg-surface-darker border border-surface-highlight rounded-xl px-4 text-white text-sm focus:border-primary/50 transition-all outline-none appearance-none disabled:opacity-50"
+                >
+                  <option value="">Selecione...</option>
+                  {companies.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#9db9a6]">
+                  <TrendingUp className="w-4 h-4 opacity-20" />
+                </div>
+              </div>
             </div>
 
-            <div className="flex-1 min-w-[200px] space-y-2">
+            <div className="lg:col-span-3 space-y-3">
               <label className="text-[10px] font-black text-[#9db9a6] uppercase tracking-[0.2em] ml-1">Instituição</label>
-              <select
-                required
-                disabled={isViewOnly}
-                title="Selecione a instituição"
-                value={formData.bank_id}
-                onChange={(e) => setFormData(prev => ({ ...prev, bank_id: e.target.value }))}
-                className="w-full h-12 bg-surface-darker border border-surface-highlight rounded-xl px-4 text-white text-sm focus:border-primary/50 transition-all outline-none appearance-none disabled:opacity-50"
-              >
-                <option value="">Selecione a instituição</option>
-                {banks.map(b => {
-                  const ownerDisplay = b.company?.name || (people.find(p => p.cpf === b.owner_document)?.nickname || b.owner_name);
-                  return (
-                    <option key={b.id} value={b.id}>
-                      {ownerDisplay ? `${ownerDisplay} - ` : ''}{b.name} (Ag: {b.agency} Ct: {b.account_number})
-                    </option>
-                  );
-                })}
-              </select>
+              <div className="relative group">
+                <select
+                  required
+                  disabled={isViewOnly}
+                  title="Selecione a instituição"
+                  value={formData.bank_id}
+                  onChange={(e) => setFormData(prev => ({ ...prev, bank_id: e.target.value }))}
+                  className="w-full h-12 bg-surface-darker border border-surface-highlight rounded-xl px-4 text-white text-sm focus:border-primary/50 transition-all outline-none appearance-none disabled:opacity-50"
+                >
+                  <option value="">Selecione...</option>
+                  {banks.map(b => {
+                    const ownerDisplay = b.company?.name || (people.find(p => p.cpf === b.owner_document)?.nickname || b.owner_name);
+                    return (
+                      <option key={b.id} value={b.id}>
+                        {ownerDisplay ? `${ownerDisplay} - ` : ''}{b.name} (Ag: {b.agency} Ct: {b.account_number})
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
             </div>
 
-            <div className="flex-[1.5] min-w-[240px] space-y-2">
+            <div className="lg:col-span-3 space-y-3">
               <label className="text-[10px] font-black text-[#9db9a6] uppercase tracking-[0.2em] ml-1">Ativo / Descrição</label>
               <input
                 required
@@ -245,54 +258,66 @@ const Investimentos: React.FC<{ user: User }> = ({ user }) => {
                 value={formData.description}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 className="w-full h-12 bg-surface-darker border border-surface-highlight rounded-xl px-4 text-white text-sm focus:border-primary/50 transition-all outline-none disabled:opacity-50"
-                placeholder="Ex: CDB 100% CDI, PETR4"
+                placeholder="CDB, Tesouro, PETR4..."
               />
             </div>
 
-            <div className="w-40 space-y-2">
-              <label className="text-[10px] font-black text-[#9db9a6] uppercase tracking-[0.2em] ml-1">Valor Aporte</label>
-              <input
-                required
-                disabled={isViewOnly}
-                type="number"
-                step="0.01"
-                value={formData.amount}
-                onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
-                className="w-full h-12 bg-surface-darker border border-surface-highlight rounded-xl px-4 text-white text-sm text-right focus:border-primary/50 transition-all outline-none disabled:opacity-50"
-                placeholder="0,00"
-              />
+            <div className="lg:col-span-2 space-y-3">
+              <label className="text-[10px] font-black text-[#9db9a6] uppercase tracking-[0.2em] ml-1">Vlr Aplicado</label>
+              <div className="relative">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9db9a6] text-xs font-bold">R$</div>
+                <input
+                  type="number"
+                  step="0.01"
+                  required
+                  disabled={isViewOnly}
+                  value={formData.amount}
+                  onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                  className="w-full h-12 bg-surface-darker border border-surface-highlight rounded-xl pl-10 pr-4 text-white text-sm focus:border-primary/50 transition-all outline-none disabled:opacity-50"
+                  placeholder="0,00"
+                />
+              </div>
             </div>
 
-            <div className="w-40 space-y-2">
-              <label className="text-[10px] font-black text-[#9db9a6] uppercase tracking-[0.2em] ml-1">Valor Atual</label>
-              <input
-                required
-                disabled={isViewOnly}
-                type="number"
-                step="0.01"
-                value={formData.current_value}
-                onChange={(e) => setFormData(prev => ({ ...prev, current_value: e.target.value }))}
-                className="w-full h-12 bg-surface-darker border border-surface-highlight rounded-xl px-4 text-white text-sm text-right focus:border-primary/50 transition-all outline-none disabled:opacity-50"
-                placeholder="0,00"
-              />
+            <div className="lg:col-span-2 space-y-3">
+              <label className="text-[10px] font-black text-[#9db9a6] uppercase tracking-[0.2em] ml-1">Vlr Atual</label>
+              <div className="relative">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9db9a6] text-xs font-bold">R$</div>
+                <input
+                  type="number"
+                  step="0.01"
+                  required
+                  disabled={isViewOnly}
+                  value={formData.current_value}
+                  onChange={(e) => setFormData(prev => ({ ...prev, current_value: e.target.value }))}
+                  className="w-full h-12 bg-surface-darker border border-surface-highlight rounded-xl pl-10 pr-4 text-white text-sm focus:border-primary/50 transition-all outline-none disabled:opacity-50"
+                  placeholder="0,00"
+                />
+              </div>
             </div>
 
             {!isViewOnly && (
-              <button
-                disabled={saving}
-                className="h-12 px-8 bg-primary text-background-dark font-black rounded-xl hover:bg-primary-hover transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-50"
-              >
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Check className="w-4 h-4" /> {editingId ? 'ATUALIZAR' : 'SALVAR'}</>}
-              </button>
-            )}
-            {isViewOnly && (
-              <button
-                type="button"
-                onClick={() => setIsViewOnly(false)}
-                className="h-12 px-8 bg-slate-200 text-slate-900 font-black rounded-xl hover:bg-slate-300 transition-all flex items-center justify-center gap-2 shadow-lg"
-              >
-                <Edit3 className="w-4 h-4" /> HABILITAR EDIÇÃO
-              </button>
+              <div className="lg:col-span-12 flex justify-end gap-4 mt-4 pt-6 border-t border-surface-highlight">
+                <button
+                  type="button"
+                  onClick={() => setShowForm(false)}
+                  className="px-6 h-12 rounded-xl text-white font-black text-xs uppercase tracking-widest hover:bg-surface-highlight transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="px-10 h-12 bg-primary hover:bg-primary-hover disabled:opacity-50 text-background-dark font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
+                >
+                  {saving ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Check className="w-4 h-4" />
+                  )}
+                  {editingId ? 'SALVAR ALTERAÇÕES' : 'CONFIRMAR APORTE'}
+                </button>
+              </div>
             )}
           </form>
         </div>

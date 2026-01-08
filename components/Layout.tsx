@@ -78,7 +78,7 @@ const Layout: React.FC<{ children: React.ReactNode, user: User, onLogout: () => 
             </div>
             <SidebarItem to="/pagar" icon="payments" label="A Pagar" isActive={isActive('/pagar')} />
             <SidebarItem to="/receber" icon="account_balance_wallet" label="A Receber" isActive={isActive('/receber')} />
-            <SidebarItem to="/investimentos" icon="trending_up" label="Investimentos" isActive={isActive('/investimentos')} />
+            <SidebarItem to="/investimentos" icon="trending_up" label="Investimentos/Saldo bancário" isActive={isActive('/investimentos')} />
 
             {(user.role === 'MASTER_ADMIN' || user.role === 'ADMIN') && (
               <>
