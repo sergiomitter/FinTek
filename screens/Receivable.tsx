@@ -55,6 +55,7 @@ const Receivable: React.FC<{ user: User }> = ({ user }) => {
   const [banks, setBanks] = useState<Bank[]>([]);
   const [people, setPeople] = useState<any[]>([]);
   const [records, setRecords] = useState<ReceivableRecord[]>([]);
+  const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
     fetchInitialData();
@@ -200,12 +201,21 @@ const Receivable: React.FC<{ user: User }> = ({ user }) => {
             />
           </div>
           {!isReadOnly && (
-            <button
-              onClick={() => setIsExportOpen(true)}
-              className="flex items-center gap-2 px-6 h-12 rounded-xl bg-primary hover:bg-primary-hover transition text-background-dark text-sm font-black shadow-lg shadow-primary/20"
-            >
-              <Download className="w-4 h-4" /> Exportar
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowForm(!showForm)}
+                className={`flex items-center gap-2 px-6 h-12 rounded-xl transition-all text-sm font-black shadow-lg ${showForm ? 'bg-slate-200 dark:bg-surface-highlight text-slate-700 dark:text-white' : 'bg-primary hover:bg-primary-hover text-background-dark shadow-primary/20'}`}
+              >
+                {showForm ? <X className="w-4 h-4" /> : <PlusCircle className="w-4 h-4" />}
+                {showForm ? 'Fechar Inclusão' : 'Inclusão de Recebimentos'}
+              </button>
+              <button
+                onClick={() => setIsExportOpen(true)}
+                className="flex items-center gap-2 px-6 h-12 rounded-xl bg-slate-100 dark:bg-surface-dark border border-slate-200 dark:border-surface-highlight hover:bg-slate-200 dark:hover:bg-surface-highlight transition text-slate-700 dark:text-white text-sm font-black shadow-sm"
+              >
+                <Download className="w-4 h-4" /> Exportar
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -260,98 +270,100 @@ const Receivable: React.FC<{ user: User }> = ({ user }) => {
         </div>
       </div>
 
-      <div className="flex flex-col xl:flex-row gap-8">
-        <div className={`bg-white dark:bg-surface-dark border border-slate-200 dark:border-surface-highlight rounded-2xl p-8 shadow-sm ${isReadOnly ? 'opacity-50 pointer-events-none' : ''}`}>
-          <div className="flex items-center gap-3 mb-8 border-b border-slate-200 dark:border-surface-highlight pb-6">
-            <PlusCircle className="text-primary w-8 h-8" />
-            <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Novo Lançamento</h3>
-          </div>
-          <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 items-end">
-            <div className="lg:col-span-4 flex flex-col gap-2">
-              <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Descrição</label>
-              <input
-                required
-                className="w-full bg-slate-50 dark:bg-surface-darker border border-slate-200 dark:border-surface-highlight rounded-xl h-12 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold placeholder-slate-400"
-                placeholder="Ex: Consultoria Mensal"
-                value={description}
-                onChange={e => setDescription(e.target.value)}
-              />
+      <div className="flex flex-col gap-8">
+        {showForm && !isReadOnly && (
+          <div className="bg-white dark:bg-surface-dark border border-slate-200 dark:border-surface-highlight rounded-2xl p-8 shadow-sm animate-in slide-in-from-top-4 duration-300">
+            <div className="flex items-center gap-3 mb-8 border-b border-slate-200 dark:border-surface-highlight pb-6">
+              <PlusCircle className="text-primary w-8 h-8" />
+              <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Novo Lançamento</h3>
             </div>
-            <div className="lg:col-span-4 flex flex-col gap-2">
-              <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Cliente</label>
-              <select
-                required
-                className="w-full bg-slate-50 dark:bg-[#111813] border border-slate-200 dark:border-surface-highlight rounded-xl h-12 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold appearance-none"
-                value={customerId}
-                onChange={e => setCustomerId(e.target.value)}
-              >
-                <option value="" disabled>Selecione o cliente...</option>
-                {customers.map(c => <option key={c.id} value={c.id}>{(c as any).trade_name || c.name}</option>)}
-              </select>
-            </div>
-            <div className="lg:col-span-4 flex flex-col gap-2">
-              <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Empresa Destino</label>
-              <select
-                required
-                className="w-full bg-slate-50 dark:bg-[#111813] border border-slate-200 dark:border-surface-highlight rounded-xl h-12 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold appearance-none"
-                value={companyId}
-                onChange={e => setCompanyId(e.target.value)}
-              >
-                <option value="" disabled>Selecione a empresa...</option>
-                {companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            </div>
+            <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 items-end">
+              <div className="lg:col-span-4 flex flex-col gap-2">
+                <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Descrição</label>
+                <input
+                  required
+                  className="w-full bg-slate-50 dark:bg-surface-darker border border-slate-200 dark:border-surface-highlight rounded-xl h-12 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold placeholder-slate-400"
+                  placeholder="Ex: Consultoria Mensal"
+                  value={description}
+                  onChange={e => setDescription(e.target.value)}
+                />
+              </div>
+              <div className="lg:col-span-4 flex flex-col gap-2">
+                <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Cliente</label>
+                <select
+                  required
+                  className="w-full bg-slate-50 dark:bg-[#111813] border border-slate-200 dark:border-surface-highlight rounded-xl h-12 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold appearance-none"
+                  value={customerId}
+                  onChange={e => setCustomerId(e.target.value)}
+                >
+                  <option value="" disabled>Selecione o cliente...</option>
+                  {customers.map(c => <option key={c.id} value={c.id}>{(c as any).trade_name || c.name}</option>)}
+                </select>
+              </div>
+              <div className="lg:col-span-4 flex flex-col gap-2">
+                <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Empresa Destino</label>
+                <select
+                  required
+                  className="w-full bg-slate-50 dark:bg-[#111813] border border-slate-200 dark:border-surface-highlight rounded-xl h-12 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold appearance-none"
+                  value={companyId}
+                  onChange={e => setCompanyId(e.target.value)}
+                >
+                  <option value="" disabled>Selecione a empresa...</option>
+                  {companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
 
-            <div className="lg:col-span-4 flex flex-col gap-2">
-              <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Banco / Conta para Crédito</label>
-              <select
-                required
-                className="w-full bg-slate-50 dark:bg-[#111813] border border-slate-200 dark:border-surface-highlight rounded-xl h-12 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold appearance-none"
-                value={bankId}
-                onChange={e => setBankId(e.target.value)}
-              >
-                <option value="" disabled>Selecione a conta bancária...</option>
-                {banks.map(b => {
-                  const ownerDisplay = b.company?.name || (people.find(p => p.cpf === b.owner_document)?.nickname || b.owner_name);
-                  return (
-                    <option key={b.id} value={b.id}>
-                      {ownerDisplay ? `${ownerDisplay} - ` : ''}{b.name} (Ag: {b.agency} Ct: {b.account_number})
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-            <div className="lg:col-span-3 flex flex-col gap-2">
-              <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Data de Vencimento</label>
-              <input
-                type="date"
-                className="w-full bg-slate-50 dark:bg-[#111813] border border-slate-200 dark:border-surface-highlight rounded-xl h-12 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold"
-                value={dueDate}
-                onChange={e => setDueDate(e.target.value)}
-              />
-            </div>
-            <div className="lg:col-span-2 flex flex-col gap-2">
-              <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Valor (R$)</label>
-              <input
-                required
-                className="w-full bg-slate-50 dark:bg-[#111813] border border-slate-200 dark:border-surface-highlight rounded-xl h-12 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary text-right font-black"
-                placeholder="0,00"
-                value={amount}
-                onChange={e => setAmount(e.target.value)}
-              />
-            </div>
-            <div className="lg:col-span-3">
-              <button
-                type="submit"
-                disabled={saving}
-                className="w-full h-12 bg-primary hover:bg-primary-hover text-background-dark font-black rounded-xl transition shadow-lg shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50"
-              >
-                <PlusCircle className={`w-5 h-5 ${saving ? 'animate-spin' : ''}`} />
-                {saving ? 'SALVANDO...' : 'SALVAR RECEBIMENTO'}
-              </button>
-            </div>
-          </form>
-        </div>
+              <div className="lg:col-span-4 flex flex-col gap-2">
+                <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Banco / Conta para Crédito</label>
+                <select
+                  required
+                  className="w-full bg-slate-50 dark:bg-[#111813] border border-slate-200 dark:border-surface-highlight rounded-xl h-12 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold appearance-none"
+                  value={bankId}
+                  onChange={e => setBankId(e.target.value)}
+                >
+                  <option value="" disabled>Selecione a conta bancária...</option>
+                  {banks.map(b => {
+                    const ownerDisplay = b.company?.name || (people.find(p => p.cpf === b.owner_document)?.nickname || b.owner_name);
+                    return (
+                      <option key={b.id} value={b.id}>
+                        {ownerDisplay ? `${ownerDisplay} - ` : ''}{b.name} (Ag: {b.agency} Ct: {b.account_number})
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+              <div className="lg:col-span-3 flex flex-col gap-2">
+                <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Data de Vencimento</label>
+                <input
+                  type="date"
+                  className="w-full bg-slate-50 dark:bg-[#111813] border border-slate-200 dark:border-surface-highlight rounded-xl h-12 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary font-bold"
+                  value={dueDate}
+                  onChange={e => setDueDate(e.target.value)}
+                />
+              </div>
+              <div className="lg:col-span-2 flex flex-col gap-2">
+                <label className="text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-[0.2em]">Valor (R$)</label>
+                <input
+                  required
+                  className="w-full bg-slate-50 dark:bg-[#111813] border border-slate-200 dark:border-surface-highlight rounded-xl h-12 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary text-right font-black"
+                  placeholder="0,00"
+                  value={amount}
+                  onChange={e => setAmount(e.target.value)}
+                />
+              </div>
+              <div className="lg:col-span-3">
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="w-full h-12 bg-primary hover:bg-primary-hover text-background-dark font-black rounded-xl transition shadow-lg shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  <PlusCircle className={`w-5 h-5 ${saving ? 'animate-spin' : ''}`} />
+                  {saving ? 'SALVANDO...' : 'SALVAR RECEBIMENTO'}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
 
         <div className="bg-white dark:bg-surface-dark border border-slate-200 dark:border-surface-highlight rounded-2xl overflow-hidden shadow-sm flex flex-col">
           <div className="p-6 border-b border-slate-200 dark:border-surface-highlight flex justify-between items-center bg-slate-50 dark:bg-surface-darker">
