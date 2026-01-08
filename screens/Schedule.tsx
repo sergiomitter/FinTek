@@ -5,7 +5,7 @@ import { User } from '../types';
 import { supabase } from '../lib/supabase';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isSameMonth, isToday, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, PlusCircle, MoneyOff, AttachMoney, AccountBalance, Clock, Calendar as CalendarIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, PlusCircle, TrendingDown, TrendingUp, Landmark, Clock, Calendar as CalendarIcon } from 'lucide-react';
 
 interface CalendarItem {
   title: string;
@@ -158,7 +158,7 @@ const Schedule: React.FC<{ user: User }> = ({ user }) => {
               <h3 className="text-3xl font-black text-white">R$ {kpiPayable.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
             </div>
             <div className="p-3 bg-danger/10 rounded-xl text-danger border border-danger/20">
-              <MoneyOff className="w-6 h-6" />
+              <TrendingDown className="w-6 h-6" />
             </div>
           </div>
           <div className="flex items-center gap-2 text-xs text-red-400 font-bold">
@@ -175,7 +175,7 @@ const Schedule: React.FC<{ user: User }> = ({ user }) => {
               <h3 className="text-3xl font-black text-white">R$ {kpiReceivable.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
             </div>
             <div className="p-3 bg-blue-500/10 rounded-xl text-blue-400 border border-blue-500/20">
-              <AttachMoney className="w-6 h-6" />
+              <TrendingUp className="w-6 h-6" />
             </div>
           </div>
           <div className="flex items-center gap-2 text-xs text-blue-400 font-bold">
@@ -192,7 +192,7 @@ const Schedule: React.FC<{ user: User }> = ({ user }) => {
               <h3 className="text-3xl font-black text-white">R$ {kpiProjected.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
             </div>
             <div className="p-3 bg-primary/10 rounded-xl text-primary border border-primary/20">
-              <AccountBalance className="w-6 h-6" />
+              <Landmark className="w-6 h-6" />
             </div>
           </div>
           <div className="flex items-center gap-2 text-xs text-primary font-bold">
