@@ -33,6 +33,7 @@ const Investimentos: React.FC<{ user: User }> = ({ user }) => {
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [companies, setCompanies] = useState<any[]>([]);
   const [banks, setBanks] = useState<any[]>([]);
+  const [people, setPeople] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -64,9 +65,14 @@ const Investimentos: React.FC<{ user: User }> = ({ user }) => {
     // Fetch banks
     const { data: banksData } = await supabase
       .from('banks')
-      .select('id, name, account_type')
+      .select('id, name, account_type, agency, account_number, owner_name, owner_document, company:companies(name)')
       .eq('is_active', true)
       .order('name');
+
+    // Fetch people for nicknames
+    const { data: peopleData } = await supabase
+      .from('people')
+      .select('name, nickname, cpf');
 
     // Fetch investments with joins
     const { data: investmentsData } = await supabase
@@ -74,12 +80,13 @@ const Investimentos: React.FC<{ user: User }> = ({ user }) => {
       .select(`
         *,
         company:companies(name),
-        bank:banks(name, account_type)
+        bank:banks(name, account_type, agency, account_number, owner_name, owner_document, company:companies(name))
       `)
       .order('created_at', { ascending: false });
 
     if (companiesData) setCompanies(companiesData);
     if (banksData) setBanks(banksData);
+    if (peopleData) setPeople(peopleData);
     if (investmentsData) setInvestments(investmentsData);
 
     setLoading(false);
@@ -219,9 +226,14 @@ const Investimentos: React.FC<{ user: User }> = ({ user }) => {
                 className="w-full h-12 bg-surface-darker border border-surface-highlight rounded-xl px-4 text-white text-sm focus:border-primary/50 transition-all outline-none appearance-none disabled:opacity-50"
               >
                 <option value="">Selecione a instituição</option>
-                {banks.map(b => (
-                  <option key={b.id} value={b.id}>{b.name} ({b.account_type})</option>
-                ))}
+                {banks.map(b => {
+                  const ownerDisplay = b.company?.name || (people.find(p => p.cpf === b.owner_document)?.nickname || b.owner_name);
+                  return (
+                    <option key={b.id} value={b.id}>
+                      {ownerDisplay ? `${ownerDisplay} - ` : ''}{b.name} (Ag: {b.agency} Ct: {b.account_number})
+                    </option>
+                  );
+                })}
               </select>
             </div>
 

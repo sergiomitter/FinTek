@@ -8,7 +8,7 @@ import EditPayableModal from '../components/EditPayableModal';
 
 interface Company { id: string; name: string; }
 interface Supplier { id: string; name: string; }
-interface Bank { id: string; name: string; type: string; account_number: string; agency: string; company?: { name: string } }
+interface Bank { id: string; name: string; type: string; account_number: string; agency: string; owner_name?: string; owner_document?: string; company?: { name: string } }
 interface PayableRecord {
   id: string;
   description: string;
@@ -52,6 +52,7 @@ const Payable: React.FC<{ user: User }> = ({ user }) => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [banks, setBanks] = useState<Bank[]>([]);
+  const [people, setPeople] = useState<any[]>([]);
   const [records, setRecords] = useState<PayableRecord[]>([]);
 
   useEffect(() => {
@@ -60,15 +61,17 @@ const Payable: React.FC<{ user: User }> = ({ user }) => {
   }, []);
 
   const fetchInitialData = async () => {
-    const [compRes, suppRes, bankRes] = await Promise.all([
+    const [compRes, suppRes, bankRes, peopleRes] = await Promise.all([
       supabase.from('companies').select('id, name').order('name'),
       supabase.from('suppliers').select('id, name, trade_name').order('name'),
-      supabase.from('banks').select('id, name, type, agency, account_number, company:companies(name)').order('name')
+      supabase.from('banks').select('id, name, type, agency, account_number, owner_name, owner_document, company:companies(name)').order('name'),
+      supabase.from('people').select('name, nickname, cpf')
     ]);
 
     if (compRes.data) setCompanies(compRes.data);
     if (suppRes.data) setSuppliers(suppRes.data as any);
     if (bankRes.data) setBanks(bankRes.data as any);
+    if (peopleRes.data) setPeople(peopleRes.data as any);
   };
 
   const fetchRecords = async () => {
@@ -306,11 +309,14 @@ const Payable: React.FC<{ user: User }> = ({ user }) => {
               onChange={e => setBankId(e.target.value)}
             >
               <option value="" disabled>Selecione a conta bancária...</option>
-              {banks.map(b => (
-                <option key={b.id} value={b.id}>
-                  {b.name} - Ag: {b.agency} Ct: {b.account_number} {b.company ? `- ${b.company.name}` : ''}
-                </option>
-              ))}
+              {banks.map(b => {
+                const ownerDisplay = b.company?.name || (people.find(p => p.cpf === b.owner_document)?.nickname || b.owner_name);
+                return (
+                  <option key={b.id} value={b.id}>
+                    {ownerDisplay ? `${ownerDisplay} - ` : ''}{b.name} (Ag: {b.agency} Ct: {b.account_number})
+                  </option>
+                );
+              })}
             </select>
           </div>
           <div className="lg:col-span-3 flex flex-col gap-2">

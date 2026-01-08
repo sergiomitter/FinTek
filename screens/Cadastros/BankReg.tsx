@@ -132,10 +132,10 @@ const BankReg: React.FC<{ user: User }> = ({ user }) => {
       // Look for Person
       const { data } = await supabase
         .from('people')
-        .select('name')
+        .select('name, nickname')
         .eq('cpf', value)
         .maybeSingle();
-      if (data) setFormData(prev => ({ ...prev, owner_name: data.name }));
+      if (data) setFormData(prev => ({ ...prev, owner_name: data.nickname || data.name }));
     } else if (clean.length === 14) {
       if (!validateCNPJ(clean)) {
         setDocError('CNPJ Inválido');
@@ -144,10 +144,10 @@ const BankReg: React.FC<{ user: User }> = ({ user }) => {
       // Look for Company
       const { data } = await supabase
         .from('companies')
-        .select('id, razao_social')
+        .select('id, name, razao_social')
         .eq('cnpj', value)
         .maybeSingle();
-      if (data) setFormData(prev => ({ ...prev, owner_name: data.razao_social, company_id: data.id }));
+      if (data) setFormData(prev => ({ ...prev, owner_name: data.name || data.razao_social, company_id: data.id }));
     }
   };
 

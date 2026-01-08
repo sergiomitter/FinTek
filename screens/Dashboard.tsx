@@ -180,6 +180,7 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
   const [receivables, setReceivables] = useState<any[]>([]);
   const [investments, setInvestments] = useState<any[]>([]);
   const [banks, setBanks] = useState<any[]>([]);
+  const [people, setPeople] = useState<any[]>([]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -195,17 +196,19 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
     firstDayMonth.setDate(1);
     const firstDayMonthStr = firstDayMonth.toISOString().split('T')[0];
 
-    const [payRes, recRes, invRes, bankRes] = await Promise.all([
-      supabase.from('payables').select('*, supplier:suppliers(name), company:companies(name)').order('due_date'),
-      supabase.from('receivables').select('*, customer:customers(name), company:companies(name)').order('due_date'),
-      supabase.from('investments').select('*, bank:banks(name), company:companies(name)').order('created_at'),
-      supabase.from('banks').select('*, company:companies(name)').order('name')
+    const [payRes, recRes, invRes, bankRes, peopleRes] = await Promise.all([
+      supabase.from('payables').select('*, supplier:suppliers(name, trade_name), company:companies(name)').order('due_date'),
+      supabase.from('receivables').select('*, customer:customers(name, trade_name), company:companies(name)').order('due_date'),
+      supabase.from('investments').select('*, bank:banks(*, company:companies(name)), company:companies(name)').order('created_at'),
+      supabase.from('banks').select('*, company:companies(name)').order('name'),
+      supabase.from('people').select('name, nickname, cpf')
     ]);
 
     if (payRes.data) setPayables(payRes.data);
     if (recRes.data) setReceivables(recRes.data);
     if (invRes.data) setInvestments(invRes.data);
     if (bankRes.data) setBanks(bankRes.data);
+    if (peopleRes.data) setPeople(peopleRes.data);
     setLoading(false);
   };
 
@@ -459,7 +462,9 @@ const Dashboard: React.FC<{ user: User }> = ({ user }) => {
                     </div>
                     <div>
                       <p className="text-slate-900 dark:text-white text-sm font-black">{bank.name}</p>
-                      <p className="text-slate-400 dark:text-text-secondary text-[10px] font-black uppercase tracking-wider">{bank.type} {bank.company ? `- ${bank.company.name}` : ''}</p>
+                      <p className="text-slate-400 dark:text-text-secondary text-[10px] font-black uppercase tracking-wider">
+                        {bank.company?.name || (people.find(p => p.cpf === bank.owner_document)?.nickname || bank.owner_name)}
+                      </p>
                     </div>
                   </div>
                   <p className="text-slate-900 dark:text-white font-black text-sm">-</p>
